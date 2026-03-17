@@ -1,8 +1,28 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Verificar si ya hay sesión
-    if (localStorage.getItem('token')) {
-        window.location.href = '/app';
-        return; // Detener ejecución si redirigimos
+document.addEventListener('DOMContentLoaded', async () => {
+    // Verificar si ya hay sesión válida
+    const existingToken = localStorage.getItem('token');
+    if (existingToken) {
+        try {
+            const sessionResponse = await fetch('/api/profile', {
+                headers: {
+                    Authorization: `Bearer ${existingToken}`
+                }
+            });
+
+            if (sessionResponse.ok) {
+                window.location.href = '/app';
+                return;
+            }
+
+            // Limpiar sesión inválida/expirada para evitar bucles de redirección
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userProfile');
+            localStorage.removeItem('gameRecentRuns');
+        } catch (error) {
+            // Si hay error de red, mantenemos al usuario en landing sin borrar sesión.
+            console.warn('No se pudo validar la sesión actual', error);
+        }
     }
 
     // Theme Logic
