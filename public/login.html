@@ -46,46 +46,236 @@
     </script>
 </head>
 <body class="auth-body">
-    <div class="auth-wrapper">
-        <button id="theme-toggle" class="theme-toggle-btn theme-toggle-absolute" title="Cambiar Tema">🌙</button>
-        <h1 class="auth-brand-outside">
-            <div class="brand-container">
+    <div class="landing-shell">
+        <header class="landing-topbar" id="inicio">
+            <a href="#inicio" class="landing-logo" aria-label="Creative inicio">
                 <span class="brand-text">Creative</span>
                 <span class="brand-subtitle">BY Mariana</span>
-            </div>
-        </h1>
-        <div class="auth-perspective">
-            <div class="auth-card-3d" id="auth-card">
-                <!-- Cara Frontal: Login -->
-                <div class="auth-face auth-front">
-                    <h2>Iniciar Sesión</h2>
-                    <div id="login-error" class="error-msg"></div>
-                    
-                    <form id="login-form" class="auth-form">
-                        <input type="text" id="login-username" placeholder="Usuario" required>
-                        <input type="password" id="login-password" placeholder="Contraseña" required>
-                        <button type="submit" class="action-btn">Entrar</button>
-                    </form>
-                    
-                    <span id="to-register" class="toggle-link">¿No tienes cuenta? Regístrate</span>
-                </div>
+            </a>
+            <nav class="landing-nav" aria-label="Navegación principal">
+                <a href="#inicio">Inicio</a>
+                <a href="#modulos">Módulos</a>
+                <a href="#para-quien">Para Quién Es</a>
+                <a href="#impacto">Impacto</a>
+                <a href="#como-funciona">Cómo Funciona</a>
+                <a href="#faq">FAQ</a>
+                <a href="#contacto">Colegios</a>
+                <a href="#auth-access">Acceder</a>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle-btn" title="Cambiar Tema">🌙</button>
+        </header>
 
-                <!-- Cara Trasera: Registro -->
-                <div class="auth-face auth-back">
-                    <h2>Crear Cuenta</h2>
-                    <div id="register-error" class="error-msg"></div>
-                    
-                    <form id="register-form" class="auth-form">
-                        <input type="text" id="register-username" placeholder="Elige un Usuario" required>
-                        <input type="password" id="register-password" placeholder="Elige una Contraseña" required>
-                        <button type="submit" class="action-btn btn-success">Registrarse</button>
-                    </form>
-                    
-                    <span id="to-login" class="toggle-link">¿Ya tienes cuenta? Inicia Sesión</span>
+        <section class="landing-hero" aria-labelledby="landing-title">
+            <div class="hero-copy">
+                <p class="hero-badge">Plataforma Educativa de Matemáticas</p>
+                <h1 id="landing-title">Domina matemáticas con práctica guiada, juegos y progreso en tiempo real.</h1>
+                <p>
+                    Creative transforma el estudio en una experiencia interactiva con módulos por nivel y retroalimentación inmediata.
+                </p>
+                <div class="hero-actions">
+                    <a class="action-btn hero-btn" href="#auth-access">Probar gratis</a>
+                    <a class="action-btn btn-success hero-btn" href="#auth-access">Crear cuenta</a>
+                    <a class="action-btn btn-secondary hero-btn" href="#como-funciona">Ver demo</a>
                 </div>
             </div>
+            <div class="hero-panel" aria-label="Resumen de beneficios">
+                <article class="hero-metric">
+                    <strong>+1.250</strong>
+                    <span>Estudiantes activos</span>
+                </article>
+                <article class="hero-metric">
+                    <strong>+35.000</strong>
+                    <span>Ejercicios resueltos</span>
+                </article>
+                <article class="hero-metric">
+                    <strong>42</strong>
+                    <span>Docentes y colegios aliados</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="landing-audience" id="para-quien" aria-label="Para quién es Creative">
+            <article class="audience-card">
+                <h2>Padres</h2>
+                <p>Supervisen avances reales con un entorno seguro y ejercicios que fortalecen hábitos de estudio desde casa.</p>
+            </article>
+            <article class="audience-card">
+                <h2>Docentes</h2>
+                <p>Complementen clases con práctica guiada por niveles, actividades dinámicas y evidencia de progreso.</p>
+            </article>
+            <article class="audience-card">
+                <h2>Estudiantes</h2>
+                <p>Aprendan a su ritmo con retos, juegos y explicaciones claras para ganar confianza en cada tema.</p>
+            </article>
+        </section>
+
+        <section class="landing-features" id="modulos" aria-label="Módulos destacados">
+            <article class="landing-card">
+                <span>➕</span>
+                <h2>Suma y Resta</h2>
+                <p>Desarrolla agilidad numérica con ejercicios progresivos y explicaciones claras.</p>
+            </article>
+            <article class="landing-card">
+                <span>✖️</span>
+                <h2>Multiplicación</h2>
+                <p>Practica tablas, refuerza memoria y mejora velocidad con retos dinámicos.</p>
+            </article>
+            <article class="landing-card">
+                <span>➗</span>
+                <h2>División Guiada</h2>
+                <p>Visualiza procesos paso a paso para comprender cada operación con confianza.</p>
+            </article>
+            <article class="landing-card">
+                <span>🎮</span>
+                <h2>Juego Educativo</h2>
+                <p>Consolida tu aprendizaje con modo contrarreloj y récords personales.</p>
+            </article>
+        </section>
+
+        <section class="landing-social-proof" id="impacto" aria-label="Resultados e historias de usuarios">
+            <header class="landing-section-header">
+                <h2>Resultados que generan confianza</h2>
+                <p>Familias y docentes refuerzan matemáticas con resultados medibles.</p>
+            </header>
+            <div class="testimonials-grid">
+                <article class="testimonial-card">
+                    <p>"Mi hijo pasó de evitar las tablas a practicarlas todos los días. El modo juego lo motivó muchísimo."</p>
+                    <strong>Laura M., madre de familia</strong>
+                </article>
+                <article class="testimonial-card">
+                    <p>"En clase usamos Creative para práctica autónoma. El progreso por estudiante nos ayuda a intervenir mejor."</p>
+                    <strong>Prof. Carlos R., docente de primaria</strong>
+                </article>
+                <article class="testimonial-card">
+                    <p>"Me gusta porque entiendo los pasos y veo mis récords. Ahora competir conmigo mismo es divertido."</p>
+                    <strong>Valentina, estudiante de 10 años</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="landing-mid-cta" aria-label="Llamado a la acción intermedio">
+            <h2>Empieza hoy y convierte práctica en resultados</h2>
+            <p>Regístrate en minutos y prueba los módulos.</p>
+            <div class="hero-actions">
+                <a class="action-btn hero-btn" href="#auth-access">Probar gratis</a>
+                <a class="action-btn btn-success hero-btn" href="#auth-access">Crear cuenta</a>
+                <a class="action-btn btn-secondary hero-btn" href="#como-funciona">Ver demo</a>
+            </div>
+        </section>
+
+        <section class="landing-steps" id="como-funciona" aria-label="Cómo funciona Creative">
+            <header class="landing-section-header">
+                <h2>Cómo funciona en 3 pasos</h2>
+            </header>
+            <article>
+                <h3>1. Registro</h3>
+                <p>Crea tu cuenta en menos de un minuto e ingresa con tu perfil personalizado.</p>
+            </article>
+            <article>
+                <h3>2. Práctica por módulos</h3>
+                <p>Selecciona el tema, nivel y tipo de actividad para practicar de forma guiada.</p>
+            </article>
+            <article>
+                <h3>3. Seguimiento de progreso</h3>
+                <p>Revisa métricas, logros y récords para identificar avances y próximos objetivos.</p>
+            </article>
+        </section>
+
+        <section class="landing-faq" id="faq" aria-label="Preguntas frecuentes">
+            <header class="landing-section-header">
+                <h2>Preguntas frecuentes</h2>
+                <p>Dudas frecuentes de familias, docentes y estudiantes.</p>
+            </header>
+            <div class="faq-grid">
+                <article class="faq-item">
+                    <h3>¿Para qué edades está diseñada Creative?</h3>
+                    <p>Creative está pensada para primaria y primeros años de secundaria, ajustando la dificultad por nivel.</p>
+                </article>
+                <article class="faq-item">
+                    <h3>¿Se puede usar desde celular y tablet?</h3>
+                    <p>Sí. La plataforma es responsive y permite practicar desde móvil, tablet o computador.</p>
+                </article>
+                <article class="faq-item">
+                    <h3>¿Cómo se mide el progreso del estudiante?</h3>
+                    <p>Cada usuario ve su historial, ejercicios completados, logros y récords en un perfil personalizado.</p>
+                </article>
+                <article class="faq-item">
+                    <h3>¿Creative sirve para acompañar clases?</h3>
+                    <p>Sí. Docentes pueden usarla como refuerzo en aula y enviar prácticas guiadas por tema.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="landing-contact" id="contacto" aria-label="Contacto para colegios">
+            <div class="contact-copy">
+                <h2>¿Representas un colegio o institución?</h2>
+                <p>
+                    Solicita una demo guiada y conoce cómo implementar Creative
+                    como refuerzo matemático en tu institución.
+                </p>
+                <ul class="contact-benefits">
+                    <li>Onboarding para docentes</li>
+                    <li>Ruta de implementación por grados</li>
+                    <li>Acompañamiento en primeras semanas</li>
+                </ul>
+            </div>
+            <form class="contact-form" aria-label="Formulario de contacto institucional" onsubmit="event.preventDefault(); window.location.href='#auth-access';">
+                <label for="school-name">Nombre de la institución</label>
+                <input id="school-name" type="text" placeholder="Ej. Colegio Nuevo Horizonte" required>
+
+                <label for="contact-name">Nombre del contacto</label>
+                <input id="contact-name" type="text" placeholder="Nombre y cargo" required>
+
+                <label for="contact-email">Correo institucional</label>
+                <input id="contact-email" type="email" placeholder="rectoria@colegio.edu" required>
+
+                <label for="contact-message">Mensaje</label>
+                <textarea id="contact-message" rows="4" placeholder="Cuéntanos cuántos estudiantes y grados deseas impactar"></textarea>
+
+                <button type="submit" class="action-btn">Quiero una demo</button>
+            </form>
+        </section>
+
+        <section class="auth-wrapper" id="auth-access" aria-label="Acceso a la plataforma">
+            <h2 class="auth-entry-title">Ingresa y continúa tu progreso</h2>
+            <div class="hero-actions auth-cta-actions">
+                <a class="action-btn hero-btn" href="#auth-access">Probar gratis</a>
+                <a class="action-btn btn-success hero-btn" href="#auth-access">Crear cuenta</a>
+                <a class="action-btn btn-secondary hero-btn" href="#como-funciona">Ver demo</a>
+            </div>
+            <div class="auth-perspective">
+                <div class="auth-card-3d" id="auth-card">
+                    <!-- Cara Frontal: Login -->
+                    <div class="auth-face auth-front">
+                        <h2>Iniciar Sesión</h2>
+                        <div id="login-error" class="error-msg"></div>
+                        
+                        <form id="login-form" class="auth-form">
+                            <input type="text" id="login-username" placeholder="Usuario" required>
+                            <input type="password" id="login-password" placeholder="Contraseña" required>
+                            <button type="submit" class="action-btn">Entrar</button>
+                        </form>
+                        
+                        <span id="to-register" class="toggle-link">¿No tienes cuenta? Regístrate</span>
+                    </div>
+
+                    <!-- Cara Trasera: Registro -->
+                    <div class="auth-face auth-back">
+                        <h2>Crear Cuenta</h2>
+                        <div id="register-error" class="error-msg"></div>
+                        
+                        <form id="register-form" class="auth-form">
+                            <input type="text" id="register-username" placeholder="Elige un Usuario" required>
+                            <input type="password" id="register-password" placeholder="Elige una Contraseña" required>
+                            <button type="submit" class="action-btn btn-success">Registrarse</button>
+                        </form>
+                        
+                        <span id="to-login" class="toggle-link">¿Ya tienes cuenta? Inicia Sesión</span>
+                    </div>
+                </div>
+            </div>
+        </section>
         </div>
-    </div>
 
     <footer class="site-footer">
         <div class="footer-content">
@@ -101,10 +291,12 @@
             <div class="footer-section">
                 <h3>Enlaces Rápidos</h3>
                 <ul class="footer-links">
-                    <li><a href="#">Inicio</a></li>
-                    <li><a href="#">Sobre Nosotros</a></li>
-                    <li><a href="#">Servicios</a></li>
-                    <li><a href="#">Blog</a></li>
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#modulos">Módulos</a></li>
+                    <li><a href="#como-funciona">Cómo Funciona</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#contacto">Colegios</a></li>
+                    <li><a href="#auth-access">Acceso</a></li>
                 </ul>
             </div>
             <div class="footer-section">
