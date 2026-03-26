@@ -1,0 +1,274 @@
+{
+  "info": {
+    "_postman_id": "a6f4f857-9c5d-4d66-9fb7-5b7b8dca11f3",
+    "name": "Plataforma Creative - Fase 3 API",
+    "description": "Coleccion de endpoints backend para navegacion educativa y progreso.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - GET Subjects",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/subjects",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "subjects"
+          ]
+        },
+        "description": "Retorna materias activas."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var data = pm.response.json();",
+              "pm.test('Respuesta es array', function () {",
+              "  pm.expect(Array.isArray(data)).to.eql(true);",
+              "});",
+              "",
+              "if (Array.isArray(data) && data.length > 0 && data[0]._id) {",
+              "  pm.collectionVariables.set('subjectId', data[0]._id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - GET Levels by Subject",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/subjects/{{subjectId}}/levels",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "subjects",
+            "{{subjectId}}",
+            "levels"
+          ]
+        },
+        "description": "Retorna niveles por materia, ordenados por order."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var data = pm.response.json();",
+              "pm.test('Respuesta es array', function () {",
+              "  pm.expect(Array.isArray(data)).to.eql(true);",
+              "});",
+              "",
+              "if (Array.isArray(data) && data.length > 0 && data[0]._id) {",
+              "  pm.collectionVariables.set('levelId', data[0]._id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - GET Units by Level",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/levels/{{levelId}}/units",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "levels",
+            "{{levelId}}",
+            "units"
+          ]
+        },
+        "description": "Retorna unidades por nivel, ordenadas por order."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var data = pm.response.json();",
+              "pm.test('Respuesta es array', function () {",
+              "  pm.expect(Array.isArray(data)).to.eql(true);",
+              "});",
+              "",
+              "if (Array.isArray(data) && data.length > 0 && data[0]._id) {",
+              "  pm.collectionVariables.set('unitId', data[0]._id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - GET Lessons by Unit",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/units/{{unitId}}/lessons",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "units",
+            "{{unitId}}",
+            "lessons"
+          ]
+        },
+        "description": "Retorna lecciones de una unidad con campos ligeros (_id, title, type, order)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var data = pm.response.json();",
+              "pm.test('Respuesta es array', function () {",
+              "  pm.expect(Array.isArray(data)).to.eql(true);",
+              "});",
+              "",
+              "if (Array.isArray(data) && data.length > 0 && data[0]._id) {",
+              "  pm.collectionVariables.set('lessonId', data[0]._id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - GET Lesson Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/lessons/{{lessonId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "lessons",
+            "{{lessonId}}"
+          ]
+        },
+        "description": "Retorna detalle completo de una leccion, incluyendo content."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - POST Progress",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"lessonId\": \"{{lessonId}}\",\n  \"score\": 85\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/progress",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "progress"
+          ]
+        },
+        "description": "Guarda o actualiza progreso de un usuario en una leccion."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "subjectId",
+      "value": ""
+    },
+    {
+      "key": "levelId",
+      "value": ""
+    },
+    {
+      "key": "unitId",
+      "value": ""
+    },
+    {
+      "key": "lessonId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": "69c471d05297812f2f92289e"
+    }
+  ]
+}
