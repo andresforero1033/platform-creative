@@ -4,7 +4,7 @@
   "description": "Aplicación de aprendizaje de matemáticas con autenticación",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "npm run build && node server.js",
     "dev": "vite",
     "dev:api": "nodemon server.js",
     "build": "vite build",

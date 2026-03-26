@@ -4,14 +4,17 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const fs = require('fs');
 const educationalRoutes = require('./routes/educationalRoutes');
 const User = require('./models/User');
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'creative-dev-secret';
 const SITE_URL = process.env.SITE_URL || 'https://creativebymariana.com';
-const LOGIN_VIEW_PATH = path.join(__dirname, 'public', 'login.html');
-const APP_VIEW_PATH = path.join(__dirname, 'public', 'index.html');
+const LEGACY_LOGIN_VIEW_PATH = path.join(__dirname, 'public', 'login.html');
+const LEGACY_APP_VIEW_PATH = path.join(__dirname, 'public', 'index.html');
+const REACT_APP_VIEW_PATH = path.join(__dirname, 'dist', 'index.html');
+const HAS_REACT_BUILD = fs.existsSync(REACT_APP_VIEW_PATH);
 const APP_ROUTES = [
     '/app',
     '/app/multiplicacion',
@@ -25,7 +28,13 @@ const APP_ROUTES = [
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+if (HAS_REACT_BUILD) {
+    app.use(express.static(path.join(__dirname, 'dist')));
+}
+
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+app.use('/legacy', express.static(path.join(__dirname, 'public'), { index: false }));
 app.use('/api', educationalRoutes);
 
 const profileDefaults = {
@@ -75,12 +84,28 @@ const authenticate = (req, res, next) => {
 
 // Rutas de Vistas (Mover arriba para prioridad)
 app.get('/', (req, res) => {
-    res.sendFile(LOGIN_VIEW_PATH);
+    if (HAS_REACT_BUILD) {
+        return res.sendFile(REACT_APP_VIEW_PATH);
+    }
+
+    return res.sendFile(LEGACY_LOGIN_VIEW_PATH);
+});
+
+app.get('/legacy', (req, res) => {
+    res.sendFile(LEGACY_LOGIN_VIEW_PATH);
 });
 
 APP_ROUTES.forEach((route) => {
+    app.get(`/legacy${route}`, (req, res) => {
+        res.sendFile(LEGACY_APP_VIEW_PATH);
+    });
+
     app.get(route, (req, res) => {
-        res.sendFile(APP_VIEW_PATH);
+        if (HAS_REACT_BUILD) {
+            return res.sendFile(REACT_APP_VIEW_PATH);
+        }
+
+        return res.sendFile(LEGACY_APP_VIEW_PATH);
     });
 });
 
@@ -433,6 +458,10 @@ app.use('/api', (req, res) => {
 
 // Manejo de rutas no encontradas (SPA fallback si fuera necesario, pero aquí redirigimos a login)
 app.get('*', (req, res) => {
+    if (HAS_REACT_BUILD) {
+        return res.sendFile(REACT_APP_VIEW_PATH);
+    }
+
     res.redirect('/');
 });
 
