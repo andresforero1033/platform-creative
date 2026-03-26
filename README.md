@@ -1,209 +1,351 @@
-# ✨ Creative - Plataforma Educativa de Matemáticas
+# Platform Creative
 
-**Creative** es una aplicación web educativa Full Stack diseñada para transformar el aprendizaje de las matemáticas en una experiencia interactiva, moderna y divertida. Enfocada en estudiantes de primaria y secundaria, ofrece herramientas para dominar la multiplicación y la división.
+Plataforma educativa Full Stack con arquitectura multitemática orientada a primaria.
 
-![Estado del Proyecto](https://img.shields.io/badge/Estado-En_Desarrollo-green)
-![Licencia](https://img.shields.io/badge/Licencia-MIT-blue)
+![Status](https://img.shields.io/badge/status-active-success)
+![Node](https://img.shields.io/badge/node-%3E%3D14-339933)
+![Vite](https://img.shields.io/badge/frontend-vite-646CFF)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-## 📚 Tabla de Contenidos
+Taxonomía del dominio:
 
-- [Características Principales](#-características-principales)
-- [Tecnologías Utilizadas](#️-tecnologías-utilizadas-mern-stack)
-- [Arquitectura General](#-arquitectura-general)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Flujo de Usuario y Autenticación](#-flujo-de-usuario-y-autenticación)
-- [API REST](#-api-rest)
-- [Variables de Entorno](#-variables-de-entorno)
-- [Instalación y Ejecución Local](#-instalación-y-ejecución-local)
-- [Scripts Disponibles](#-scripts-disponibles)
-- [Pruebas Automatizadas](#-pruebas-automatizadas)
-- [Roadmap](#-roadmap)
-- [Contribución](#-contribución)
-- [Licencia](#-licencia)
+Materia -> Nivel -> Unidad -> Lección
 
-## ✨ Características Principales
+---
 
-### 🎨 Experiencia de Usuario (UI/UX)
-*   **Diseño 'Modern Playful':** Interfaz limpia con Glassmorphism, animaciones suaves y una paleta de colores vibrante.
-*   **Navegación Flexible:** Menú lateral inteligente que permite tres estados: expandido, colapsado (solo iconos) y totalmente oculto para maximizar el área de trabajo.
-*   **🌙 Modo Oscuro:** Soporte nativo para tema oscuro, ideal para reducir la fatiga visual.
-*   **⚡ Tema Aurora Neon:** Tercer modo cromático con glassmorphism translúcido, gradientes energéticos y microinteracciones que aportan dinamismo sin perder accesibilidad.
-*   **Diseño Responsivo:** Adaptable a cualquier dispositivo (Móvil, Tablet, Escritorio).
-*   **Footer Dinámico:** Información de contacto, servicios y legal accesible al final del contenido.
+## Tabla de Contenidos / Table of Contents
 
-### 🧮 Herramientas Educativas
-*   **Tablas de Multiplicar:** Generador instantáneo de tablas del 1 al 10.
-*   **Generador de Ejercicios:**
-    *   **Multiplicación:** Niveles progresivos (1, 2, 3 cifras).
-    *   **División:** Niveles progresivos (1, 2, 3 cifras).
-*   **Visualización de Procesos:** Muestra el paso a paso de las operaciones ("Show your work"), simulando el proceso en papel.
-*   **Calculadora Integrada:** Para verificaciones rápidas sin salir de la app.
-*   **Modulo de Juegos:** Reto contrarreloj de 60 segundos que genera multiplicaciones aleatorias, suma puntos por respuestas correctas y entrega bonos de estrellas por racha.
+- [ES - Resumen](#es---resumen)
+- [ES - Estado Actual](#es---estado-actual)
+- [ES - Arquitectura](#es---arquitectura)
+- [ES - Changelog](#es---changelog)
+- [ES - API](#es---api)
+- [ES - Variables de Entorno](#es---variables-de-entorno)
+- [ES - Setup Local](#es---setup-local)
+- [ES - Scripts](#es---scripts)
+- [ES - Seed y Datos](#es---seed-y-datos)
+- [ES - Despliegue](#es---despliegue)
+- [ES - Troubleshooting](#es---troubleshooting)
+- [EN - Overview](#en---overview)
+- [EN - Current Status](#en---current-status)
+- [EN - Architecture](#en---architecture)
+- [EN - Changelog](#en---changelog)
+- [EN - API](#en---api)
+- [EN - Environment Variables](#en---environment-variables)
+- [EN - Local Setup](#en---local-setup)
+- [EN - Scripts](#en---scripts)
+- [EN - Seed and Data](#en---seed-and-data)
+- [EN - Deployment](#en---deployment)
 
-### 🎮 Gamificación y Progreso
-*   **Modo Juegos dedicado:** Sólo visible dentro del módulo “Juegos”, con tablero, historial y controles accesibles desde cualquier dispositivo.
-*   **Historial de Partidas:** Registra tus últimos intentos e identifica mejoras en tu velocidad mental.
-*   **Récords Globales del Perfil:** Cada puntaje máximo se sincroniza con la sección “Records de los juegos” en el perfil del usuario.
-*   **Bonos de Estrellas y Trofeos:** Cada 10 aciertos consecutivos se otorgan recompensas adicionales que alimentan el progreso general.
+---
 
-### 📚 Material de Aprendizaje
-*   **Multiplicación:** Guías interactivas desde conceptos básicos hasta multiplicación con decimales (Nivel 4).
-*   **División:** Explicaciones detalladas desde repartos simples hasta división larga y con resto (Nivel 4).
+## ES - Resumen
 
-### 🔐 Seguridad y Gestión
-*   **Autenticación Segura:** Sistema de Registro y Login protegido con JWT.
-*   **Protección de Rutas:** Acceso restringido a las herramientas educativas solo para usuarios autenticados.
+Platform Creative implementa un flujo completo de aprendizaje:
 
-## 🛠️ Tecnologías Utilizadas (MERN Stack)
+1. Selección de materia.
+2. Navegación por niveles.
+3. Selección de unidades.
+4. Lecciones teóricas y prácticas.
+5. Registro de progreso en MongoDB.
 
-*   **Frontend:**
-    *   HTML5 Semántico.
-    *   CSS3 (Variables, Flexbox, Grid, Animaciones).
-    *   JavaScript (Vanilla ES6+).
-*   **Backend:**
-    *   Node.js.
-    *   Express.js.
-*   **Base de Datos:**
-    *   MongoDB Atlas (Cloud).
-    *   Mongoose (ODM).
-*   **Seguridad:**
-    *   JWT (JSON Web Tokens).
-    *   Bcryptjs (Hashing de contraseñas).
+Incluye frontend React + Vite, backend Node + Express y persistencia en MongoDB Atlas.
 
-## 🧱 Arquitectura General
+## ES - Estado Actual
 
-- **Cliente SPA (`public/`)**: HTML/CSS/JS con módulos especializados (`math_core.js`, `module_manager.js`, `ui.js`) que renderizan la interfaz, generan ejercicios y gestionan la experiencia gamificada sin frameworks adicionales.
-- **Servidor Express (`server.js`)**: Exposición de rutas públicas (`/`, `/app`) y endpoints `/api/register` y `/api/login`, además de servir los activos estáticos.
-- **Persistencia (`models/User.js`)**: Usuarios almacenados en MongoDB Atlas con `Mongoose`, incluyendo hooks `pre-save` para hashing y métodos personalizados para validar contraseñas.
-- **Autenticación**: JWT firmados con `JWT_SECRET`, enviados al frontend para proteger las secciones privadas mediante almacenamiento local.
-- **Testing**: Suite con `Jest` + `Supertest` que valida tanto la lógica matemática como las rutas del servidor para prevenir regresiones.
+- 7 materias activas: Matemáticas, Ciencias, Español, Inglés, Historia, Geografía y Arte.
+- Endpoints educativos en [routes/educationalRoutes.js](routes/educationalRoutes.js).
+- Home y navegación con estilo dinámico basado en `uiConfig` por materia.
+- Lecciones de práctica con `MathTableGenerator` funcional, persistencia local y guardado de progreso.
+- Semilla multitemática en [seed.js](seed.js) para base `creativeDB`.
 
-## 🗂️ Estructura del Proyecto
+## ES - Arquitectura
 
-```text
-.
-├── public/
-│   ├── index.html           # Aplicación principal (SPA)
-│   ├── login.html           # Vista de autenticación con animaciones 3D
-│   ├── css/styles.css       # Diseño modern playful + dark mode
-│   └── js/
-│       ├── auth.js          # Flujos de login/registro y manejo de tokens
-│       ├── math_core.js     # Motor matemático (N, Z, Q, conjuntos)
-│       ├── module_manager.js# UI/estado de módulos y progreso
-│       ├── script.js        # Inicialización general y navegación
-│       └── ui.js            # Sonidos, notificaciones, modales y tour
-├── models/User.js           # Esquema y lógica de usuarios
-├── server.js                # Servidor Express + endpoints REST
-├── tests/
-│   ├── math_core.test.js    # Cobertura de utilidades y operaciones
-│   └── server.test.js       # Smoke tests de rutas principales
-├── package.json             # Dependencias y scripts npm
-└── README.md                # Documentación del proyecto
+### Diagrama General
+
+```mermaid
+flowchart LR
+  U[Usuario] --> F[Frontend React Vite]
+  F -->|/api via proxy| B[Backend Express]
+  B --> R[routes/educationalRoutes]
+  R --> M[(Mongoose Models)]
+  M --> D[(MongoDB Atlas creativeDB)]
+  S[seed.js] --> D
 ```
 
-## 🔁 Flujo de Usuario y Autenticación
+### Backend
 
-1. **Ingreso**: Los usuarios acceden a `/` y, si no tienen token, ven `login.html` con modo oscuro, animaciones y formularios.
-2. **Registro/Login**: `auth.js` consume `/api/register` o `/api/login`, valida respuestas y almacena `token` + `username` en `localStorage`.
-3. **Protección de rutas**: Al detectar un token válido, se redirige automáticamente a `/app`, donde la SPA carga módulos educativos, perfil y juegos.
-4. **Persistencia local**: Progreso, récords y configuraciones (tema, audio, tour guiado) se guardan en `localStorage` para mantener la experiencia personalizada incluso offline.
+- [server.js](server.js): Express, conexión MongoDB, estáticos y montaje de rutas.
+- [routes/educationalRoutes.js](routes/educationalRoutes.js): API educativa.
+- Modelos:
+  - [models/Subject.js](models/Subject.js)
+  - [models/GradeLevel.js](models/GradeLevel.js)
+  - [models/Unit.js](models/Unit.js)
+  - [models/Lesson.js](models/Lesson.js)
+  - [models/User.js](models/User.js)
+- [seed.js](seed.js): limpieza y carga de catálogo.
 
-## 🔌 API REST
+### Frontend
 
-| Método | Ruta           | Descripción                               | Cuerpo esperado                   | Respuesta exitosa |
-|--------|----------------|-------------------------------------------|-----------------------------------|-------------------|
-| POST   | `/api/register`| Crea un usuario nuevo en MongoDB          | `{ "username", "password" }`      | `201 + mensaje`   |
-| POST   | `/api/login`   | Autentica y entrega un JWT válido por 1h  | `{ "username", "password" }`      | `200 + token + username` |
+- [src/App.jsx](src/App.jsx): rutas, vistas, estados de carga/error y gamificación.
+- [src/services/api.js](src/services/api.js): cliente HTTP.
+- [src/main.jsx](src/main.jsx): bootstrap React.
+- [vite.config.js](vite.config.js): proxy local `/api` -> `http://localhost:3000`.
 
-- **Errores controlados**: Respuestas `400` para duplicados, `401` para credenciales inválidas y `500` para fallos internos.
-- **Protección adicional**: Contraseñas hasheadas con `bcryptjs` y tokens firmados con expiración para reducir riesgos.
+## ES - Changelog
 
-## ⚙️ Variables de Entorno
+- Fase 1: definición de taxonomía pedagógica (Materia -> Nivel -> Unidad -> Lección).
+- Fase 2: migración de modelos y limpieza de esquema legacy acoplado.
+- Fase 3: implementación de API educativa y endpoint de progreso.
+- Fase 4: frontend React con navegación jerárquica, gamificación, persistencia local y feedback visual.
+- Preparación de despliegue: base `creativeDB`, seed expandido de 7 materias, documentación y scripts de producción.
 
-Define un archivo `.env` en la raíz con las siguientes claves:
+## ES - API
 
-| Variable      | Uso                                                          |
-|---------------|---------------------------------------------------------------|
-| `PORT`        | Puerto HTTP para Express. Valor por defecto: `3000`.          |
-| `MONGODB_URI` | Cadena de conexión a MongoDB Atlas o instancia local.         |
-| `JWT_SECRET`  | Frase segura utilizada para firmar y validar los tokens JWT.  |
+Prefijo base: `/api`
 
-> Mantén este archivo fuera del control de versiones para proteger credenciales.
+- `GET /subjects`
+- `GET /subjects/:subjectId/levels`
+- `GET /levels/:levelId/units`
+- `GET /units/:unitId/lessons`
+- `GET /lessons/:id`
+- `POST /progress`
 
-## 🚀 Instalación y Ejecución Local
+Payload de progreso:
 
-1.  **Clonar el repositorio:**
-    ```bash
-    git clone https://github.com/andresforero1033/generador-de-tablas-de-multiplicar.git
-    cd generador-de-tablas-de-multiplicar
-    ```
+```json
+{
+  "userId": "<id>",
+  "lessonId": "<id>",
+  "score": 100
+}
+```
 
-2.  **Instalar dependencias:**
-    ```bash
-    npm install
-    ```
+## ES - Variables de Entorno
 
-3.  **Configurar variables de entorno:**
-    Crea un archivo `.env` en la raíz del proyecto:
-    ```env
-    PORT=3000
-    MONGODB_URI=tu_cadena_de_conexion_mongodb
-    JWT_SECRET=tu_secreto_super_seguro
-    ```
+Configura [ .env ](.env):
 
-4.  **Iniciar el servidor:**
-    ```bash
-    npm start
-    ```
-    > Durante el desarrollo puedes usar `npm run dev` para recarga automática mediante `nodemon`.
+- `MONGODB_URI` (debe apuntar a `/creativeDB`)
+- `JWT_SECRET`
+- `PORT`
+- `SITE_URL` (recomendado)
+- `NODE_ENV` (`development` o `production`)
 
-5.  **Acceder a la aplicación:**
-    Abre tu navegador en `http://localhost:3000`.
+Documento auxiliar: [REPLY_ME_VARS.txt](REPLY_ME_VARS.txt).
 
-6. **Ejecutar pruebas automatizadas:**
-    ```bash
-    npm test
-    ```
+## ES - Setup Local
 
-## 📦 Scripts Disponibles
+1. Clonar:
 
-- `npm start`: Lanza el servidor Express en modo producción simple.
-- `npm run dev`: Ejecuta el servidor con `nodemon` para reinicios en caliente durante el desarrollo.
-- `npm test`: Corre la suite de pruebas con `Jest` y `Supertest`.
+```bash
+git clone https://github.com/andresforero1033/platform-creative.git
+cd platform-creative
+```
 
-## 🧪 Pruebas Automatizadas
+2. Instalar:
 
-- **`tests/math_core.test.js`** valida el corazón matemático: utilidades (`gcd`, simplificación de fracciones), generadores y resolución de operaciones para conjuntos `N`, `Z` y `Q`.
-- **`tests/server.test.js`** verifica que las rutas principales respondan correctamente, incluyendo redirecciones y el fallback hacia `/`.
-- Ejecuta `npm test` antes de publicar cambios para asegurar que no existan regresiones en la lógica crítica.
+```bash
+npm install
+```
 
-## 🛣️ Roadmap
+3. Configurar `.env`:
 
-- Integrar almacenamiento de progreso y récords en base de datos para sincronizar múltiples dispositivos.
-- Agregar endpoints autenticados para ejercicios personalizados y analíticas de desempeño.
-- Internacionalizar la interfaz para soportar inglés y portugués.
-- Añadir más módulos teóricos (fracciones avanzadas, álgebra básica) con sus respectivos juegos.
+```env
+MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/creativeDB?retryWrites=true&w=majority&appName=<app>
+JWT_SECRET=<tu_secret>
+PORT=3000
+SITE_URL=http://localhost:5173
+NODE_ENV=development
+```
 
-## 🔍 Estrategia SEO y Contenido
+4. Sembrar datos:
 
-### Metadatos y estructura técnica
-- La SPA (`public/index.html`) y la vista pública (`public/login.html`) ahora incluyen títulos, descripciones largas, keywords y etiquetas sociales orientadas a la palabra clave **“Creative”**, además de etiquetas `canonical`, `alternate` y `robots` para guiar a los motores de búsqueda.
-- Se añadieron tarjetas Open Graph + Twitter Card, lo que mejora los _snippets_ cuando se comparte Creative en redes.
-- Se incorporó _structured data_ JSON-LD (`EducationalOrganization` y `WebSite`) con relación explícita a **Devora Software Inc.**, ayudando a Google a comprender la marca.
-- Mantén el dominio público sirviendo siempre vía HTTPS (`https://creativebymariana.com`) para que las señales de canonicalidad y la indexación sean consistentes.
+```bash
+node seed.js
+```
 
-### Recomendaciones on-page
-- **Estructura de URLs:** idealmente expón rutas semánticas (`/app/multiplicacion`, `/app/juegos`, `/app/aprendizaje/guia-tablas`) en lugar de solo `#` o controladores JS. Puedes hacer `app/:section` en Express y mapearlo a la misma SPA para que los buscadores rastreen cada módulo.
-- **Encabezados:** garantiza que exista un único `h1` (“Creative | Plataforma Educativa de Matemáticas”) en cada vista y usa `h2/h3` para módulos (Perfil, Juegos, Herramientas) para reforzar las palabras clave.
-- **Contenido descriptivo:** agrega copys introductorios en cada sección explicando el beneficio (“Creative Multiplicación: práctica guiada con pasos”). Esto genera densidad semántica natural sin _keyword stuffing_.
-- **Enlaces internos:** enlaza desde tarjetas y botones del dashboard hacia las rutas descritas arriba (por ejemplo, `<a href="/app/juegos">Ir a Juegos Creative</a>`). Esto reparte autoridad entre secciones clave.
-- **Activos multimedia:** sirve un `og:image` real (1200×630) optimizado y nómbralo con la keyword (`creative-platform-cover.png`). Compleméntalo con texto alternativo descriptivo.
-- **Rendimiento e indexabilidad:** genera un `sitemap.xml` y un `robots.txt` sencillo (`User-agent: * / Allow: /`) desde Express para agilizar el descubrimiento. Mantén pesos de CSS/JS minificados para mejorar Core Web Vitals.
+5. Levantar backend y frontend:
 
-## 🤝 Contribución
+```bash
+npm run dev:api
+```
 
-¡Las contribuciones son bienvenidas! Si tienes ideas para mejorar la aplicación, por favor abre un "Issue" o envía un "Pull Request".
+```bash
+npm run dev
+```
 
-## 📄 Licencia
+6. Abrir:
 
-Este proyecto está bajo la Licencia MIT.
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:3000/api/subjects`
+
+## ES - Scripts
+
+- `npm start` -> backend producción (`server.js`)
+- `npm run dev:api` -> backend con nodemon
+- `npm run dev` -> Vite
+- `npm run build` -> build frontend
+- `npm run preview` -> preview frontend
+- `npm test` -> pruebas Jest
+
+## ES - Seed y Datos
+
+- El seed intenta `dropDatabase`.
+- Si Atlas no permite `dropDatabase` por permisos, continúa con `deleteMany` (fallback seguro).
+- Resultado esperado después de `node seed.js`:
+  - 7 materias
+  - al menos 1 nivel por materia
+  - al menos 1 unidad por materia
+  - lecciones `theory` por materia
+  - lección `practice` de tabla del 7 en Matemáticas
+
+## ES - Despliegue
+
+### Render (recomendado)
+
+Variables:
+
+- `MONGODB_URI` -> `.../creativeDB...`
+- `JWT_SECRET`
+- `PORT`
+- `SITE_URL`
+- `NODE_ENV=production`
+
+Comandos:
+
+- Build: `npm run build`
+- Start: `npm start`
+
+Si necesitas repoblar producción:
+
+```bash
+node seed.js
+```
+
+## ES - Troubleshooting
+
+- API vacía: ejecutar `node seed.js` y revisar `MONGODB_URI`.
+- Proxy Vite: validar [vite.config.js](vite.config.js).
+- Error Atlas `dropDatabase`: esperado con roles limitados, el fallback limpia colecciones.
+- CORS local: consumir vía `/api` desde frontend.
+
+---
+
+## EN - Overview
+
+Platform Creative is a full-stack educational platform built around a strict learning hierarchy:
+
+Subject -> Grade Level -> Unit -> Lesson
+
+It currently provides an end-to-end user flow from subject selection to lesson progress tracking.
+
+## EN - Current Status
+
+- 7 active subjects in the catalog.
+- Educational API endpoints implemented and connected.
+- Dynamic UI themed by subject `uiConfig`.
+- Practice lessons powered by a working multiplication generator.
+- Local progress persistence + server-side progress saving.
+- Multi-subject seed script targeting `creativeDB`.
+
+## EN - Architecture
+
+### Backend
+
+- [server.js](server.js): Express server and route mounting.
+- [routes/educationalRoutes.js](routes/educationalRoutes.js): educational endpoints.
+- Mongoose models in [models/Subject.js](models/Subject.js), [models/GradeLevel.js](models/GradeLevel.js), [models/Unit.js](models/Unit.js), [models/Lesson.js](models/Lesson.js), [models/User.js](models/User.js).
+- [seed.js](seed.js): database seeding logic.
+
+### Frontend
+
+- [src/App.jsx](src/App.jsx): routing, page logic, loading/error states, gamification.
+- [src/services/api.js](src/services/api.js): Axios service layer.
+- [vite.config.js](vite.config.js): local API proxy.
+
+## EN - Changelog
+
+- Phase 1: pedagogical taxonomy defined (Subject -> Grade Level -> Unit -> Lesson).
+- Phase 2: model migration and legacy cleanup.
+- Phase 3: educational API and progress endpoint implemented.
+- Phase 4: React frontend with hierarchical routing, gamification, local persistence, and UX feedback.
+- Deployment readiness: `creativeDB`, expanded seed with 7 subjects, and production-ready documentation/scripts.
+
+## EN - API
+
+Base prefix: `/api`
+
+- `GET /subjects`
+- `GET /subjects/:subjectId/levels`
+- `GET /levels/:levelId/units`
+- `GET /units/:unitId/lessons`
+- `GET /lessons/:id`
+- `POST /progress`
+
+## EN - Environment Variables
+
+Required:
+
+- `MONGODB_URI` (must target `/creativeDB`)
+- `JWT_SECRET`
+- `PORT`
+
+Recommended:
+
+- `SITE_URL`
+- `NODE_ENV`
+
+Reference checklist: [REPLY_ME_VARS.txt](REPLY_ME_VARS.txt).
+
+## EN - Local Setup
+
+```bash
+git clone https://github.com/andresforero1033/platform-creative.git
+cd platform-creative
+npm install
+node seed.js
+npm run dev:api
+npm run dev
+```
+
+Open:
+
+- `http://localhost:5173`
+- `http://localhost:3000/api/subjects`
+
+## EN - Scripts
+
+- `npm start` -> production backend
+- `npm run dev:api` -> backend with nodemon
+- `npm run dev` -> Vite dev server
+- `npm run build` -> frontend build
+- `npm run preview` -> frontend preview
+- `npm test` -> Jest tests
+
+## EN - Seed and Data
+
+The seed attempts `dropDatabase` first. If Atlas permissions do not allow it, the script safely falls back to collection cleanup using `deleteMany`.
+
+## EN - Deployment
+
+Use these defaults in your hosting provider:
+
+- Build command: `npm run build`
+- Start command: `npm start`
+- Env vars: `MONGODB_URI`, `JWT_SECRET`, `PORT`, `SITE_URL`, `NODE_ENV`
+
+After successful deploy, run:
+
+```bash
+node seed.js
+```
+
+---
+
+## Postman Collection
+
+[postman/creative-platform-fase3.postman_collection.json](postman/creative-platform-fase3.postman_collection.json)
+
+## License
+
+MIT
