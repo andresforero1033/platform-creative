@@ -255,6 +255,14 @@ app.get('/sitemap.xml', (req, res) => {
     res.type('application/xml').send(xml);
 });
 
+// Evita que rutas API inexistentes devuelvan HTML y rompan el parseo JSON en frontend.
+app.use('/api', (req, res) => {
+    res.status(404).json({
+        error: 'Ruta API no encontrada',
+        path: req.originalUrl
+    });
+});
+
 // Rutas de Vistas
 // (Eliminadas de aquí porque se movieron arriba)
 
