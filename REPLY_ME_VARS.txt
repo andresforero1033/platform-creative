@@ -1,0 +1,30 @@
+Variables de entorno recomendadas para nuevo hosting (Creative Platform)
+
+1) MONGODB_URI (OBLIGATORIA)
+   - Debe apuntar a la base creativeDB.
+   - Formato ejemplo:
+     mongodb+srv://<usuario>:<password>@<cluster>.mongodb.net/creativeDB?retryWrites=true&w=majority&appName=<app>
+
+2) JWT_SECRET (OBLIGATORIA)
+   - Clave secreta larga y aleatoria para firmar tokens.
+   - Ejemplo: usa 32+ caracteres.
+
+3) PORT (OBLIGATORIA EN HOSTING NODE)
+   - Render/hosting la define automaticamente en la mayoria de casos.
+   - Si se configura manualmente, usar el puerto asignado por la plataforma.
+
+4) SITE_URL (RECOMENDADA)
+   - URL publica del sitio para robots/sitemap.
+   - Ejemplo:
+     https://platform-creative.onrender.com
+
+5) NODE_ENV (RECOMENDADA)
+   - production
+
+6) VITE_API_BASE_URL (OPCIONAL)
+   - Solo necesaria si despliegas frontend y backend en dominios separados.
+   - Si usas proxy interno o mismo dominio, puede omitirse.
+
+Notas:
+- El codigo actual tambien acepta MONGO_URI como alias, pero se recomienda usar MONGODB_URI como variable principal.
+- No guardar credenciales reales en el repositorio.
