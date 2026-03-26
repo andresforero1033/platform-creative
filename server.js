@@ -5,9 +5,10 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const educationalRoutes = require('./routes/educationalRoutes');
-// const User = require('./models/User');
+const User = require('./models/User');
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || 'creative-dev-secret';
 const SITE_URL = process.env.SITE_URL || 'https://creativebymariana.com';
 const LOGIN_VIEW_PATH = path.join(__dirname, 'public', 'login.html');
 const APP_VIEW_PATH = path.join(__dirname, 'public', 'index.html');
@@ -64,7 +65,7 @@ const authenticate = (req, res, next) => {
     }
 
     try {
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const payload = jwt.verify(token, JWT_SECRET);
         req.userId = payload.userId;
         next();
     } catch (error) {
@@ -89,6 +90,170 @@ mongoose.connect(process.env.MONGODB_URI)
     .catch(err => console.error('Error conectando a MongoDB:', err));
 
 // Rutas legacy deshabilitadas temporalmente durante la migración a Plataforma Creative.
+app.post('/api/register', async (req, res) => {
+    try {
+        const username = String(req.body?.username || '').trim();
+        const password = String(req.body?.password || '');
+        const inputEmail = String(req.body?.email || '').trim().toLowerCase();
+
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Usuario y contraseña son obligatorios' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+        }
+
+        const existingByName = await User.findOne({ name: username });
+        if (existingByName) {
+            return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
+        }
+
+        const safeAlias = username.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '') || 'user';
+        const email = inputEmail || `${safeAlias}@creative.local`;
+
+        const existingByEmail = await User.findOne({ email });
+        if (existingByEmail) {
+            return res.status(400).json({ error: 'El correo ya está en uso' });
+        }
+
+        const user = new User({
+            name: username,
+            email,
+            password,
+            profile: applyProfileDefaults({ name: username })
+        });
+
+        await user.save();
+        return res.status(201).json({ message: 'Usuario registrado exitosamente' });
+    } catch (error) {
+        return res.status(500).json({ error: 'Error al registrar usuario' });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    try {
+        const username = String(req.body?.username || '').trim();
+        const password = String(req.body?.password || '');
+
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Usuario y contraseña son obligatorios' });
+        }
+
+        const user = await User.findOne({
+            $or: [
+                { name: username },
+                { email: username.toLowerCase() }
+            ]
+        });
+
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
+        return res.json({ token, username: user.name });
+    } catch (error) {
+        return res.status(500).json({ error: 'Error en el servidor' });
+    }
+});
+
+app.get('/api/profile', authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        return res.json({ profile: serializeProfile(user.profile) });
+    } catch (error) {
+        return res.status(500).json({ error: 'No se pudo obtener el perfil' });
+    }
+});
+
+const ALLOWED_PROFILE_FIELDS = new Set([
+    'name',
+    'avatar',
+    'level',
+    'stars',
+    'trophies',
+    'exercisesCompleted',
+    'gameRecords'
+]);
+
+app.put('/api/profile', authenticate, async (req, res) => {
+    try {
+        const updates = (req.body && req.body.profile) || {};
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        const currentProfile = applyProfileDefaults(user.profile || {});
+
+        Object.entries(updates).forEach(([field, value]) => {
+            if (!ALLOWED_PROFILE_FIELDS.has(field)) return;
+            if (field === 'gameRecords') {
+                currentProfile.gameRecords = {
+                    ...(currentProfile.gameRecords || {}),
+                    ...(value || {})
+                };
+            } else {
+                currentProfile[field] = value;
+            }
+        });
+
+        user.profile = currentProfile;
+        await user.save();
+        return res.json({ profile: serializeProfile(user.profile) });
+    } catch (error) {
+        return res.status(500).json({ error: 'No se pudo actualizar el perfil' });
+    }
+});
+
+app.post('/api/profile/history', authenticate, async (req, res) => {
+    try {
+        const entry = req.body?.entry;
+        if (!entry || !entry.type) {
+            return res.status(400).json({ error: 'Entrada de historial inválida' });
+        }
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        const currentProfile = applyProfileDefaults(user.profile || {});
+
+        if (!Array.isArray(currentProfile.history)) {
+            currentProfile.history = [];
+        }
+
+        const normalizedEntry = {
+            clientId: entry.clientId || undefined,
+            type: entry.type,
+            module: entry.module || 'general',
+            score: typeof entry.score === 'number' ? entry.score : 0,
+            totalQuestions: typeof entry.totalQuestions === 'number' ? entry.totalQuestions : undefined,
+            grade: typeof entry.grade === 'number' ? entry.grade : undefined,
+            meta: entry.meta && typeof entry.meta === 'object' ? entry.meta : {},
+            createdAt: entry.createdAt ? new Date(entry.createdAt) : new Date()
+        };
+
+        if (normalizedEntry.clientId) {
+            currentProfile.history = currentProfile.history.filter((item) => item.clientId !== normalizedEntry.clientId);
+        }
+
+        currentProfile.history.unshift(normalizedEntry);
+        currentProfile.history = currentProfile.history.slice(0, 100);
+        user.profile = currentProfile;
+        await user.save();
+
+        return res.json({ history: serializeProfile(user.profile).history });
+    } catch (error) {
+        return res.status(500).json({ error: 'No se pudo actualizar el historial' });
+    }
+});
+
 // app.post('/api/register', async (req, res) => {
 //     try {
 //         const { username, password } = req.body;

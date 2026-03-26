@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const ProgressSchema = new mongoose.Schema(
     {
@@ -28,9 +29,31 @@ const UserSchema = new mongoose.Schema(
         lastLessonId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Lesson'
+        },
+        profile: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
         }
     },
     { timestamps: true }
 );
+
+UserSchema.pre('save', async function hashPassword(next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+UserSchema.methods.comparePassword = function comparePassword(candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model('User', UserSchema);
