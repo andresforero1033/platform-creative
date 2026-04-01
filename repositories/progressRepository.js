@@ -25,7 +25,16 @@ async function upsertCompletedLesson(userId, subjectId, lessonId) {
   ).lean();
 }
 
+async function countCompletedLessonsBySubject(userId, subjectId) {
+  return Progress.countDocuments({
+    userId,
+    subjectId,
+    completed: true,
+  });
+}
+
 module.exports = {
   findOneLean,
   upsertCompletedLesson,
+  countCompletedLessonsBySubject,
 };

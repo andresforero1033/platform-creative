@@ -20,10 +20,50 @@ async function incrementUserPoints(userId, points) {
   return User.findByIdAndUpdate(userId, { $inc: { points } });
 }
 
+async function updateActivityAndStreak(userId, payload) {
+  return User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        lastActivity: payload.lastActivity,
+        currentStreak: payload.currentStreak,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).lean();
+}
+
+async function addBadgeToUser(userId, badge) {
+  return User.findOneAndUpdate(
+    {
+      _id: userId,
+      "badges.badgeId": { $ne: badge.badgeId },
+    },
+    {
+      $push: {
+        badges: {
+          badgeId: badge.badgeId,
+          nombre: badge.nombre,
+          awardedAt: badge.awardedAt,
+        },
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).lean();
+}
+
 module.exports = {
   findByEmailLean,
   createUser,
   findByEmailWithPassword,
   findByIdLean,
   incrementUserPoints,
+  updateActivityAndStreak,
+  addBadgeToUser,
 };

@@ -1,4 +1,5 @@
 const subjectService = require("../services/subjectService");
+const certificateService = require("../services/certificateService");
 
 async function getSubjects(req, res, next) {
   try {
@@ -28,7 +29,21 @@ async function getSubjectById(req, res, next) {
   }
 }
 
+async function getSubjectCertificate(req, res, next) {
+  try {
+    const result = await certificateService.generateSubjectCertificate(req.user.id, req.params.id);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${result.fileName}"`);
+
+    return res.status(result.statusCode).send(result.buffer);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getSubjects,
   getSubjectById,
+  getSubjectCertificate,
 };

@@ -70,6 +70,53 @@ paths:
                 items:
                   $ref: '#/components/schemas/Subject'
 
+  /student/subjects/{id}/certificate:
+    get:
+      tags: [Student, Subjects]
+      summary: Descargar certificado PDF de materia completada
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID de la materia (ObjectId de MongoDB)
+      responses:
+        '200':
+          description: Certificado generado correctamente
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: El estudiante aun no tiene el 100% de la materia
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Debes completar el 100% de la materia para generar certificado.
+        '404':
+          description: Usuario o materia no encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+
   /teacher/subjects/{subjectId}/lessons:
     post:
       tags: [Teacher]

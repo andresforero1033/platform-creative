@@ -32,6 +32,36 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0
+    },
+    lastActivity: {
+      type: Date,
+      default: null
+    },
+    currentStreak: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    badges: {
+      type: [
+        {
+          badgeId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Badge",
+            required: true
+          },
+          nombre: {
+            type: String,
+            required: true,
+            trim: true
+          },
+          awardedAt: {
+            type: Date,
+            default: Date.now
+          }
+        }
+      ],
+      default: []
     }
   },
   {
