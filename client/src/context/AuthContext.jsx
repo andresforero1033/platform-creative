@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import api from '../api/axios'
-
-const AuthContext = createContext(null)
+import AuthContext from './AuthContextValue'
 
 const ACCESS_TOKEN_KEY = 'creative_access_token'
 const REFRESH_TOKEN_KEY = 'creative_refresh_token'
@@ -37,7 +36,7 @@ function readStoredUser() {
 
   try {
     return JSON.parse(raw)
-  } catch (_error) {
+  } catch {
     return null
   }
 }
@@ -59,7 +58,7 @@ export function AuthProvider({ children }) {
 
   const isAuthenticated = !!user
 
-  const persistSession = (payload) => {
+  const persistSession = useCallback((payload) => {
     if (payload.accessToken) {
       localStorage.setItem(ACCESS_TOKEN_KEY, payload.accessToken)
       setAuthHeader(payload.accessToken)
@@ -74,17 +73,17 @@ export function AuthProvider({ children }) {
       localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser))
       setUser(normalizedUser)
     }
-  }
+  }, [])
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
     setAuthHeader(null)
     setUser(null)
-  }
+  }, [])
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     setLoading(true)
 
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY)
@@ -109,7 +108,7 @@ export function AuthProvider({ children }) {
       setLoading(false)
 
       return { authenticated: true, user: meUser || storedUser }
-    } catch (_meError) {
+    } catch {
       try {
         if (!refreshToken) {
           throw new Error('No refresh token')
@@ -126,15 +125,15 @@ export function AuthProvider({ children }) {
         setLoading(false)
 
         return { authenticated: !!storedUser, user: storedUser }
-      } catch (_refreshError) {
+      } catch {
         clearSession()
         setLoading(false)
         return { authenticated: false }
       }
     }
-  }
+  }, [clearSession, persistSession])
 
-  const login = async ({ email, password }) => {
+  const login = useCallback(async ({ email, password }) => {
     const response = await api.post('/auth/login', { email, password })
     const data = response?.data?.data || {}
 
@@ -148,9 +147,9 @@ export function AuthProvider({ children }) {
       user: normalizeUser(data.user),
       dashboardPath: getDashboardPathByRole(data?.user?.role),
     }
-  }
+  }, [persistSession])
 
-  const register = async ({ name, email, password, role }) => {
+  const register = useCallback(async ({ name, email, password, role }) => {
     const response = await api.post('/auth/register', { name, email, password, role })
     const data = response?.data?.data || {}
 
@@ -164,25 +163,25 @@ export function AuthProvider({ children }) {
       user: normalizeUser(data.user),
       dashboardPath: getDashboardPathByRole(data?.user?.role),
     }
-  }
+  }, [persistSession])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
 
     try {
       if (refreshToken) {
         await api.post('/auth/logout', { refreshToken })
       }
-    } catch (_error) {
+    } catch {
       // Ignoramos errores de red/revocación para no bloquear cierre local.
     } finally {
       clearSession()
     }
-  }
+  }, [clearSession])
 
   useEffect(() => {
     checkAuth()
-  }, [])
+  }, [checkAuth])
 
   const value = useMemo(() => ({
     user,
@@ -193,16 +192,7 @@ export function AuthProvider({ children }) {
     logout,
     checkAuth,
     getDashboardPathByRole,
-  }), [user, loading, isAuthenticated])
+  }), [user, loading, isAuthenticated, login, register, logout, checkAuth])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider')
-  }
-
-  return context
 }

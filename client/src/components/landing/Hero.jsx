@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion'
 
+const MotionDiv = motion.div
+
 function Hero() {
   return (
     <section id="producto" className="relative overflow-hidden px-6 pb-24 pt-20">
       <div className="mx-auto grid w-full max-w-6xl gap-10 md:grid-cols-2 md:items-center">
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -19,9 +21,9 @@ function Hero() {
           <p className="max-w-xl text-base text-slate-700 md:text-lg">
             La plataforma educativa que se adapta a tu ritmo con inteligencia y juegos.
           </p>
-        </motion.div>
+        </MotionDiv>
 
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.65, delay: 0.1 }}
@@ -33,7 +35,7 @@ function Hero() {
             <div className="rounded-2xl bg-brand-yellow/30 p-4">Retos y Certificados</div>
             <div className="rounded-2xl bg-slate-100 p-4">Alertas en Tiempo Real</div>
           </div>
-        </motion.div>
+        </MotionDiv>
       </div>
       <div className="pointer-events-none absolute inset-0 -z-10 bg-hero-grid bg-[size:24px_24px]" />
     </section>

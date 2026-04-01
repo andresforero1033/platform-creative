@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion'
 
+const MotionArticle = motion.article
+
 function SubjectCard({ subject, mastery = 0, index = 0 }) {
   const masterySafe = Math.max(0, Math.min(100, Math.round(mastery)))
 
   return (
-    <motion.article
+    <MotionArticle
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: index * 0.08 }}
@@ -26,7 +28,7 @@ function SubjectCard({ subject, mastery = 0, index = 0 }) {
           style={{ width: `${masterySafe}%` }}
         />
       </div>
-    </motion.article>
+    </MotionArticle>
   )
 }
 

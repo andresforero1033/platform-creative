@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
-import { useAuth } from '../../context/AuthContext'
+import useAuth from '../../hooks/useAuth'
 import SubjectCard from '../../components/dashboard/SubjectCard'
 import StreakCounter from '../../components/dashboard/StreakCounter'
 
@@ -60,7 +60,7 @@ function StudentDashboard() {
           setSubjects(fetchedSubjects)
           setMasteryBySubject(buildMasteryBySubject(fetchedSubjects, reviewItems))
         }
-      } catch (_error) {
+      } catch {
         if (isMounted) {
           setError('No pudimos cargar tu progreso ahora mismo.')
         }
