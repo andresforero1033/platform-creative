@@ -34,6 +34,14 @@ async function countCompletedLessonsBySubject(userId, subjectId) {
   });
 }
 
+async function countMasteredLessonsBySubject(userId, subjectId) {
+  return Progress.countDocuments({
+    userId,
+    subjectId,
+    mastered: true,
+  });
+}
+
 async function upsertQuizAttempt(userId, subjectId, lessonId, score) {
   return Progress.findOneAndUpdate(
     {
@@ -114,11 +122,24 @@ async function aggregateCompletedLessonsBySubject(userId) {
   ]);
 }
 
+async function countCompletedLessonsByUserBetween(userId, startDate, endDate) {
+  return Progress.countDocuments({
+    userId,
+    completed: true,
+    completedAt: {
+      $gte: startDate,
+      $lt: endDate,
+    },
+  });
+}
+
 module.exports = {
   findOneLean,
   upsertCompletedLesson,
   countCompletedLessonsBySubject,
+  countMasteredLessonsBySubject,
   upsertQuizAttempt,
   markLessonAsMastered,
   aggregateCompletedLessonsBySubject,
+  countCompletedLessonsByUserBetween,
 };

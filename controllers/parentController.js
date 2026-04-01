@@ -28,7 +28,22 @@ async function getParentNotifications(req, res, next) {
   }
 }
 
+async function getWeeklyReport(req, res, next) {
+  try {
+    const result = await parentService.getWeeklyReport(req.params.id);
+
+    return res.status(result.statusCode).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getStudentProgress,
   getParentNotifications,
+  getWeeklyReport,
 };

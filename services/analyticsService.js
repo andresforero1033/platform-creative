@@ -58,6 +58,50 @@ async function getStudentSummary(studentId) {
   };
 }
 
+async function getWeeklyComparison(studentId) {
+  if (!studentId) {
+    throw new AppError("studentId es obligatorio.", 400);
+  }
+
+  const user = await userRepository.findByIdLean(studentId);
+  if (!user) {
+    throw new AppError("Estudiante no encontrado.", 404);
+  }
+
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+  const fourteenDaysAgo = new Date(now.getTime() - (14 * 24 * 60 * 60 * 1000));
+
+  const [currentWeekCompleted, previousWeekCompleted] = await Promise.all([
+    progressRepository.countCompletedLessonsByUserBetween(studentId, sevenDaysAgo, now),
+    progressRepository.countCompletedLessonsByUserBetween(studentId, fourteenDaysAgo, sevenDaysAgo),
+  ]);
+
+  let increasePercentage;
+  if (previousWeekCompleted === 0) {
+    increasePercentage = currentWeekCompleted > 0 ? 100 : 0;
+  } else {
+    increasePercentage = Math.max(
+      0,
+      Math.round(((currentWeekCompleted - previousWeekCompleted) / previousWeekCompleted) * 100)
+    );
+  }
+
+  const insight = `¡Tu hijo está progresando un ${increasePercentage}% más rápido esta semana!`;
+
+  return {
+    statusCode: 200,
+    message: "Comparativo semanal generado correctamente.",
+    data: {
+      currentWeekCompleted,
+      previousWeekCompleted,
+      increasePercentage,
+      insight,
+    },
+  };
+}
+
 module.exports = {
   getStudentSummary,
+  getWeeklyComparison,
 };

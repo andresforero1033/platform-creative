@@ -1,5 +1,6 @@
 const AppError = require("../utils/appError");
 const notificationRepository = require("../repositories/notificationRepository");
+const analyticsService = require("./analyticsService");
 
 async function getStudentProgress(studentId) {
   return {
@@ -25,7 +26,12 @@ async function getParentNotifications(studentId) {
   };
 }
 
+async function getWeeklyReport(studentId) {
+  return analyticsService.getWeeklyComparison(studentId);
+}
+
 module.exports = {
   getStudentProgress,
   getParentNotifications,
+  getWeeklyReport,
 };

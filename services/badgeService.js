@@ -12,6 +12,15 @@ function buildSubjectMasterBadgePayload(subject) {
   };
 }
 
+function buildGrandMasterBadgePayload(subject) {
+  return {
+    nombre: `Gran Maestro de ${subject.name}`,
+    descripcion: `Aprobaste el Examen de Gran Maestro en ${subject.name}.`,
+    icono: subject.icon,
+    requerimiento: `Aprobar Examen de Gran Maestro en ${subject.name}`,
+  };
+}
+
 async function awardSubjectMasterBadge(studentId, subject) {
   const badgePayload = buildSubjectMasterBadgePayload(subject);
   const badge = await badgeRepository.upsertByNombre(badgePayload);
@@ -52,6 +61,48 @@ async function awardSubjectMasterBadge(studentId, subject) {
   };
 }
 
+async function awardGrandMasterBadge(studentId, subject) {
+  const badgePayload = buildGrandMasterBadgePayload(subject);
+  const badge = await badgeRepository.upsertByNombre(badgePayload);
+
+  const updatedUser = await userRepository.addBadgeToUser(studentId, {
+    badgeId: badge._id,
+    nombre: badge.nombre,
+    awardedAt: new Date(),
+  });
+
+  if (!updatedUser) {
+    return { awarded: false, badge: null };
+  }
+
+  await notificationRepository.createNotification({
+    userId: studentId,
+    type: "achievement",
+    title: `Logro desbloqueado: ${badge.nombre}`,
+    message: `Notificacion para padre/madre: el estudiante obtuvo la medalla especial ${badge.nombre}.`,
+    metadata: {
+      badgeId: badge._id,
+      subjectId: subject._id,
+      subjectName: subject.name,
+      tier: "grand_master",
+    },
+  });
+
+  logger.info({
+    event: "grand_master_badge_awarded",
+    studentId,
+    badgeId: badge._id,
+    badgeName: badge.nombre,
+    subjectId: subject._id,
+  });
+
+  return {
+    awarded: true,
+    badge,
+  };
+}
+
 module.exports = {
   awardSubjectMasterBadge,
+  awardGrandMasterBadge,
 };
