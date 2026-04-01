@@ -69,8 +69,13 @@ function Register() {
 
       navigate(dashboardPath, { replace: true })
     } catch (error) {
+      const validationError = error?.response?.data?.data?.[0]?.msg
       const backendMessage = error?.response?.data?.message
-      setSubmitError(backendMessage || 'No se pudo completar el registro.')
+      const networkMessage = error?.message === 'Network Error'
+        ? 'No hay conexion con el backend. Verifica que API este en puerto 10000.'
+        : ''
+
+      setSubmitError(validationError || backendMessage || networkMessage || 'No se pudo completar el registro.')
     } finally {
       setSubmitting(false)
     }

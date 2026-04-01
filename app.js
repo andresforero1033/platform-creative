@@ -23,6 +23,12 @@ function createApp() {
   const app = express();
   const openApiDocument = YAML.load(path.join(__dirname, "docs", "openapi.yaml"));
   const startTime = Date.now();
+  const defaultAllowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+  const envAllowedOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -37,7 +43,13 @@ function createApp() {
   app.use(helmet());
   app.use(
     cors({
-      origin: "http://localhost:5173",
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+
+        return callback(new Error("Origen no permitido por CORS"));
+      },
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
