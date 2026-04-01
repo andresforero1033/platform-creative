@@ -46,8 +46,23 @@ async function deleteLesson(req, res, next) {
   }
 }
 
+async function getMyFeedback(req, res, next) {
+  try {
+    const result = await teacherService.getMyFeedback(req.user.id);
+
+    return res.status(result.statusCode).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   addLessonToSubject,
   updateLesson,
   deleteLesson,
+  getMyFeedback,
 };

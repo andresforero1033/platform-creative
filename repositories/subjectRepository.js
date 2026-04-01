@@ -16,6 +16,10 @@ async function findByIdWithLessonsLean(subjectId) {
   return Subject.findById(subjectId).select("_id lessons").lean();
 }
 
+async function findByLessonIdLean(lessonId) {
+  return Subject.findOne({ "lessons._id": lessonId }).lean();
+}
+
 async function addLesson(subjectId, title, content, teacherId) {
   return Subject.findByIdAndUpdate(
     subjectId,
@@ -53,6 +57,7 @@ module.exports = {
   findByIdLean,
   findByIdWithLessons,
   findByIdWithLessonsLean,
+  findByLessonIdLean,
   addLesson,
   saveSubject,
   countSubjects,

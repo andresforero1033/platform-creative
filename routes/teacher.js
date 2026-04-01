@@ -5,6 +5,7 @@ const {
   addLessonToSubject,
   updateLesson,
   deleteLesson,
+  getMyFeedback,
 } = require("../controllers/teacherController");
 
 const router = express.Router();
@@ -31,6 +32,13 @@ router.delete(
   authorize("teacher", "supervisor"),
   auditLogger,
   deleteLesson
+);
+
+router.get(
+  "/my-feedback",
+  protect,
+  authorize("teacher", "supervisor"),
+  getMyFeedback
 );
 
 module.exports = router;

@@ -24,7 +24,7 @@ router.post(
 		body("email").isEmail().withMessage("email invalido."),
 		body("password").isLength({ min: 6 }).withMessage("password debe tener al menos 6 caracteres."),
 		body("role")
-			.isIn(["student", "teacher", "parent", "supervisor"])
+			.isIn(["student", "teacher", "parent", "supervisor", "admin"])
 			.withMessage("role invalido."),
 	],
 	validateRequest,

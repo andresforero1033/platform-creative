@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const subjectRepository = require("../repositories/subjectRepository");
+const feedbackRepository = require("../repositories/feedbackRepository");
 
 async function addLessonToSubject(subjectId, payload, teacherId) {
   const { title, content } = payload;
@@ -84,8 +85,19 @@ async function deleteLesson(subjectId, lessonId) {
   };
 }
 
+async function getMyFeedback(teacherId) {
+  const feedback = await feedbackRepository.findByTeacherIdLean(teacherId);
+
+  return {
+    statusCode: 200,
+    message: "Feedback del docente obtenido correctamente.",
+    data: feedback,
+  };
+}
+
 module.exports = {
   addLessonToSubject,
   updateLesson,
   deleteLesson,
+  getMyFeedback,
 };

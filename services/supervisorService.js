@@ -1,6 +1,10 @@
+const mongoose = require("mongoose");
+const AppError = require("../utils/appError");
 const userRepository = require("../repositories/userRepository");
 const subjectRepository = require("../repositories/subjectRepository");
 const progressRepository = require("../repositories/progressRepository");
+const feedbackRepository = require("../repositories/feedbackRepository");
+const notificationRepository = require("../repositories/notificationRepository");
 
 function buildTeacherLessonMap(subjects) {
   const lessonTeacherMap = new Map();
@@ -122,7 +126,59 @@ async function getDifficultLessons() {
   };
 }
 
+async function createLessonFeedback(supervisorId, lessonId, content) {
+  if (!lessonId || !mongoose.Types.ObjectId.isValid(lessonId)) {
+    throw new AppError("lessonId invalido.", 400);
+  }
+
+  if (!content || content.trim().length < 5) {
+    throw new AppError("content es obligatorio y debe tener al menos 5 caracteres.", 400);
+  }
+
+  const subject = await subjectRepository.findByLessonIdLean(lessonId);
+  if (!subject) {
+    throw new AppError("Leccion no encontrada.", 404);
+  }
+
+  const lesson = subject.lessons.find((item) => String(item._id) === String(lessonId));
+  if (!lesson) {
+    throw new AppError("Leccion no encontrada.", 404);
+  }
+
+  if (!lesson.teacherId) {
+    throw new AppError("La leccion no tiene docente asignado.", 400);
+  }
+
+  const feedback = await feedbackRepository.createFeedback({
+    lessonId,
+    subjectId: subject._id,
+    teacherId: lesson.teacherId,
+    supervisorId,
+    content: content.trim(),
+  });
+
+  await notificationRepository.createNotification({
+    userId: lesson.teacherId,
+    type: "system",
+    title: "Nueva observacion pedagogica",
+    message: "Tu leccion requiere ajustes segun revision de supervisión.",
+    metadata: {
+      feedbackId: feedback._id,
+      subjectId: subject._id,
+      lessonId,
+      lessonTitle: lesson.title,
+    },
+  });
+
+  return {
+    statusCode: 201,
+    message: "Feedback pedagógico registrado y notificado al docente.",
+    data: feedback,
+  };
+}
+
 module.exports = {
   getTeacherInsights,
   getDifficultLessons,
+  createLessonFeedback,
 };
