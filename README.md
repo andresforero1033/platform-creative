@@ -38,7 +38,7 @@ Request -> Route -> Controller -> Service -> Repository -> MongoDB
 npm test
 ```
 
-Este comando falla automáticamente si la cobertura global baja del 70%.
+Este comando ejecuta suites unitarias e integraciones del backend.
 
 ### Generar reporte de cobertura
 
@@ -54,6 +54,20 @@ Se generan reportes en la carpeta `coverage/`:
 ### Base de datos de prueba
 
 Los tests de integración usan `mongodb-memory-server`, por lo que no ensucian tu MongoDB Atlas.
+
+### Verificación manual de tiempo real (Socket.io)
+
+```bash
+npm run socket:test
+```
+
+Este script levanta un cliente Socket.io autenticado y valida recepción de eventos en tiempo real.
+
+### Resumen rápido de comandos de calidad
+
+- `npm test`: unit e integración.
+- `npm run test:coverage`: cobertura con umbral mínimo global.
+- `npm run socket:test`: chequeo manual realtime.
 
 ## Pipeline CI
 
@@ -91,3 +105,28 @@ Trigger actual:
 - Se genera una notificación de logro para seguimiento de padre/madre.
 
 Esta implementación mantiene el patrón por capas Route -> Controller -> Service -> Repository.
+
+## Arquitectura de Tiempo Real
+
+### Flujo de conexión
+
+1. Cliente inicia handshake con Access Token JWT.
+2. Middleware de autenticación en sockets valida token.
+3. Si es válido, el socket se vincula al usuario conectado (Socket User Binding).
+4. Los servicios del backend emiten eventos dirigidos por userId.
+
+### Catálogo de eventos
+
+- `NEW_NOTIFICATION`: evento general de notificaciones al usuario destino.
+- `NEW_FEEDBACK`: evento específico para docentes cuando supervisor registra feedback.
+
+### Diagrama de bloques
+
+```mermaid
+flowchart LR
+	A[Services de Dominio<br/>notificationService / supervisorService] --> B[socketService.sendToUser]
+	B --> C[Socket Gateway<br/>config/socket.js]
+	C --> D[JWT Auth Middleware]
+	D --> E[User Socket Binding]
+	E --> F[Cliente Web / Móvil]
+```

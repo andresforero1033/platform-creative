@@ -5,6 +5,7 @@ info:
   description: |
     Contrato inicial para la plataforma educativa Creative.
     Incluye autenticacion por roles y gestion de materias/lecciones.
+    Nota: el backend tambien soporta WebSockets (Socket.io) para notificaciones en tiempo real.
 servers:
   - url: http://localhost:10000/api/v1
     description: Local
