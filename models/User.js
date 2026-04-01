@@ -62,6 +62,22 @@ const userSchema = new mongoose.Schema(
         }
       ],
       default: []
+    },
+    profile: {
+      avatar: {
+        type: String,
+        default: "",
+        trim: true
+      },
+      experienceLevel: {
+        type: String,
+        enum: ["beginner", "intermediate", "advanced"],
+        default: "beginner"
+      },
+      interests: {
+        type: [String],
+        default: []
+      }
     }
   },
   {

@@ -58,6 +58,23 @@ async function addBadgeToUser(userId, badge) {
   ).lean();
 }
 
+async function updateProfileMetadata(userId, profile) {
+  return User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        "profile.avatar": profile.avatar,
+        "profile.experienceLevel": profile.experienceLevel,
+        "profile.interests": profile.interests,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).lean();
+}
+
 module.exports = {
   findByEmailLean,
   createUser,
@@ -66,4 +83,5 @@ module.exports = {
   incrementUserPoints,
   updateActivityAndStreak,
   addBadgeToUser,
+  updateProfileMetadata,
 };

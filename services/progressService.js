@@ -4,6 +4,8 @@ const subjectRepository = require("../repositories/subjectRepository");
 const progressRepository = require("../repositories/progressRepository");
 const userRepository = require("../repositories/userRepository");
 const notificationRepository = require("../repositories/notificationRepository");
+const quizRepository = require("../repositories/quizRepository");
+const questionRepository = require("../repositories/questionRepository");
 const badgeService = require("./badgeService");
 const { logger } = require("../config/logger");
 
@@ -163,7 +165,96 @@ async function completeLesson(userId, payload) {
   };
 }
 
+function normalizeAnswers(answers) {
+  const answerMap = new Map();
+
+  for (const answer of answers) {
+    if (!answer?.questionId || !Number.isInteger(answer.selectedOption)) {
+      continue;
+    }
+
+    answerMap.set(String(answer.questionId), answer.selectedOption);
+  }
+
+  return answerMap;
+}
+
+async function submitQuiz(userId, payload) {
+  const { subjectId, lessonId, answers } = payload;
+
+  if (!subjectId || !lessonId || !Array.isArray(answers)) {
+    throw new AppError("subjectId, lessonId y answers son obligatorios.", 400);
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(subjectId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
+    throw new AppError("subjectId o lessonId tiene formato invalido.", 400);
+  }
+
+  const subject = await subjectRepository.findByIdWithLessonsLean(subjectId);
+  if (!subject) {
+    throw new AppError("Materia no encontrada.", 404);
+  }
+
+  const lessonExists = subject.lessons.some((lesson) => String(lesson._id) === String(lessonId));
+  if (!lessonExists) {
+    throw new AppError("Leccion no encontrada en la materia indicada.", 404);
+  }
+
+  const quiz = await quizRepository.findBySubjectAndLessonLean(subjectId, lessonId);
+  if (!quiz) {
+    throw new AppError("Quiz no encontrado para la leccion indicada.", 404);
+  }
+
+  const questions = await questionRepository.findByIdsLean(quiz.questionIds);
+  if (!questions.length) {
+    throw new AppError("El quiz no tiene preguntas configuradas.", 400);
+  }
+
+  const answerMap = normalizeAnswers(answers);
+  let correctAnswers = 0;
+
+  for (const question of questions) {
+    const selectedOption = answerMap.get(String(question._id));
+    if (selectedOption === question.correctOption) {
+      correctAnswers += 1;
+    }
+  }
+
+  const score = Math.round((correctAnswers / questions.length) * 100);
+  const passed = score > 70;
+
+  const progress = passed
+    ? await progressRepository.markLessonAsMastered(userId, subjectId, lessonId, score)
+    : await progressRepository.upsertQuizAttempt(userId, subjectId, lessonId, score);
+
+  logger.info({
+    event: "quiz_submitted",
+    userId,
+    subjectId,
+    lessonId,
+    score,
+    passed,
+    mastered: passed,
+  });
+
+  return {
+    statusCode: 200,
+    message: passed
+      ? "Quiz aprobado. Leccion marcada como Dominada (Mastered)."
+      : "Quiz reprobado. Debes superar 70 para dominar la leccion.",
+    data: {
+      score,
+      passed,
+      mastered: passed,
+      totalQuestions: questions.length,
+      correctAnswers,
+      progress,
+    },
+  };
+}
+
 module.exports = {
   completeLesson,
   calculateStreakOutcome,
+  submitQuiz,
 };

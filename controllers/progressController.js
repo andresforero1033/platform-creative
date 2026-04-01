@@ -14,6 +14,25 @@ async function completeLesson(req, res, next) {
   }
 }
 
+async function submitQuiz(req, res, next) {
+  try {
+    const result = await progressService.submitQuiz(req.user.id, {
+      subjectId: req.params.subjectId,
+      lessonId: req.params.lessonId,
+      answers: req.body.answers,
+    });
+
+    return res.status(result.statusCode).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   completeLesson,
+  submitQuiz,
 };

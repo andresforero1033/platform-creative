@@ -27,6 +27,25 @@ const progressSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    mastered: {
+      type: Boolean,
+      default: false,
+    },
+    masteredAt: {
+      type: Date,
+      default: null,
+    },
+    lastQuizScore: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+    },
+    quizAttempts: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
   },
   {
     timestamps: true,

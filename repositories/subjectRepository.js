@@ -39,6 +39,14 @@ async function saveSubject(subject) {
   return subject.toObject();
 }
 
+async function countSubjects() {
+  return Subject.countDocuments({});
+}
+
+async function findAllWithLessonsLean() {
+  return Subject.find({}).select("_id name lessons").lean();
+}
+
 module.exports = {
   findSubjects,
   findByIdLean,
@@ -46,4 +54,6 @@ module.exports = {
   findByIdWithLessonsLean,
   addLesson,
   saveSubject,
+  countSubjects,
+  findAllWithLessonsLean,
 };
