@@ -103,6 +103,19 @@ paths:
                     example: false
                   message:
                     type: string
+                    example: Debes completar el 100% de la materia para generar certificado.
+        '404':
+          description: Usuario o materia no encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
 
   /api/subjects/{id}/certificate:
     get:
@@ -130,19 +143,6 @@ paths:
           description: La materia aun no esta completada al 100%
         '404':
           description: Usuario o materia no encontrada
-                    example: Debes completar el 100% de la materia para generar certificado.
-        '404':
-          description: Usuario o materia no encontrada
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  message:
-                    type: string
 
   /teacher/subjects/{subjectId}/lessons:
     post:
