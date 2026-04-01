@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: Creative Platform API
+  version: 0.1.0
+  description: |
+    Contrato inicial para la plataforma educativa Creative.
+    Incluye autenticacion por roles y gestion de materias/lecciones.
+servers:
+  - url: http://localhost:10000/api/v1
+    description: Local
+  - url: https://platform-creative.onrender.com/api/v1
+    description: Render Free (referencial)
+tags:
+  - name: Auth
+  - name: Student
+  - name: Parent
+  - name: Teacher
+  - name: Supervisor
+  - name: Subjects
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesion iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /student/subjects:
+    get:
+      tags: [Student, Subjects]
+      summary: Listar materias para estudiante
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de materias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subject'
+
+  /teacher/subjects/{subjectId}/lessons:
+    post:
+      tags: [Teacher]
+      summary: Crear leccion en materia
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLessonRequest'
+      responses:
+        '201':
+          description: Leccion creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+
+  /supervisor/audit/logs:
+    get:
+      tags: [Supervisor]
+      summary: Consultar logs de auditoria
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Eventos de auditoria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    SubjectId:
+      name: subjectId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: ID de la materia (ObjectId de MongoDB)
+
+  schemas:
+    UserRole:
+      type: string
+      description: Rol de acceso del usuario
+      enum:
+        - student
+        - teacher
+        - parent
+        - supervisor
+
+    SubjectName:
+      type: string
+      description: Catalogo oficial de materias de Creative
+      enum:
+        - Matemáticas
+        - Español
+        - Ciencias Naturales
+        - Ciencias Sociales
+        - Inglés
+        - Arte y Creatividad
+        - Educación Física
+        - Desarrollo de Software (Enfoque en lógica y coding para niños)
+        - Inteligencia Emocional
+        - Educación Financiera
+
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          example: 67e9f9d9dd2f5f001a9f1001
+        name:
+          type: string
+          minLength: 2
+          example: Ana Martinez
+        email:
+          type: string
+          format: email
+          example: ana@creative.app
+        role:
+          $ref: '#/components/schemas/UserRole'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserCreate:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - role
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+          description: Se almacena encriptada con bcrypt
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    Lesson:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          minLength: 3
+          example: Introduccion a fracciones
+        content:
+          type: string
+          minLength: 10
+          example: En esta leccion aprenderemos a representar partes de un todo.
+
+    Subject:
+      type: object
+      required:
+        - id
+        - name
+        - color
+        - icon
+        - description
+        - lessons
+      properties:
+        id:
+          type: string
+          example: 67e9f9d9dd2f5f001a9f2001
+        name:
+          $ref: '#/components/schemas/SubjectName'
+        color:
+          type: string
+          description: Color hexadecimal unico por materia
+          pattern: '^#([A-Fa-f0-9]{6})$'
+          example: '#E53935'
+        icon:
+          type: string
+          description: Identificador de icono para frontend
+          example: calculator
+        description:
+          type: string
+          minLength: 10
+          example: Descubre que los numeros son superpoderes para resolver retos cada dia.
+        lessons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Lesson'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      allOf:
+        - $ref: '#/components/schemas/UserCreate'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+
+    CreateLessonRequest:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+
+    AuditLog:
+      type: object
+      required:
+        - id
+        - action
+        - actorUserId
+        - timestamp
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+          example: LESSON_DELETED_BY_SUPERVISOR
+        actorUserId:
+          type: string
+        targetType:
+          type: string
+          example: lesson
+        targetId:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time

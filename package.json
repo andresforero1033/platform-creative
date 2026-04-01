@@ -7,14 +7,35 @@
   "scripts": {
     "start": "node server.js",
     "build": "node -e \"console.log('Build step completado para Render Free')\"",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "seed": "node seed.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --runInBand"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "dotenv": "^16.5.0",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.6.1",
+    "cors": "^2.8.5",
     "express": "^4.21.2",
-    "mongoose": "^8.13.2"
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.4.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mongoose": "^8.13.2",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0",
+    "xss-clean": "^0.1.4",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.1.4",
+    "supertest": "^7.1.0"
   }
 }
