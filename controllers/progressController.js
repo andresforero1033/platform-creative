@@ -32,7 +32,22 @@ async function submitQuiz(req, res, next) {
   }
 }
 
+async function getReviewRecommendations(req, res, next) {
+  try {
+    const result = await progressService.getReviewRecommendations(req.user.id);
+
+    return res.status(result.statusCode).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   completeLesson,
   submitQuiz,
+  getReviewRecommendations,
 };

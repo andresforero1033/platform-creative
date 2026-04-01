@@ -15,6 +15,11 @@ const SUBJECT_NAMES = [
 
 const lessonSchema = new mongoose.Schema(
   {
+    teacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
     title: {
       type: String,
       required: true,

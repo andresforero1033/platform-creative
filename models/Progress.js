@@ -46,6 +46,26 @@ const progressSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    quizPassCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    quizFailCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    nextReviewDate: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    reviewLevel: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
   },
   {
     timestamps: true,

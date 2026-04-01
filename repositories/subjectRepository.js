@@ -16,12 +16,13 @@ async function findByIdWithLessonsLean(subjectId) {
   return Subject.findById(subjectId).select("_id lessons").lean();
 }
 
-async function addLesson(subjectId, title, content) {
+async function addLesson(subjectId, title, content, teacherId) {
   return Subject.findByIdAndUpdate(
     subjectId,
     {
       $push: {
         lessons: {
+          teacherId: teacherId || null,
           title,
           content,
         },

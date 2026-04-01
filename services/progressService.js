@@ -11,6 +11,8 @@ const { logger } = require("../config/logger");
 
 const STREAK_BONUS_INTERVAL = 7;
 const STREAK_BONUS_POINTS = 20;
+const REVIEW_FAIL_DAYS = 2;
+const REVIEW_PASS_DAYS = 7;
 
 function isSameDay(dateA, dateB) {
   return (
@@ -222,10 +224,34 @@ async function submitQuiz(userId, payload) {
 
   const score = Math.round((correctAnswers / questions.length) * 100);
   const passed = score > 70;
+  const previousProgress = await progressRepository.findOneLean({ userId, subjectId, lessonId });
+  const now = new Date();
 
-  const progress = passed
-    ? await progressRepository.markLessonAsMastered(userId, subjectId, lessonId, score)
-    : await progressRepository.upsertQuizAttempt(userId, subjectId, lessonId, score);
+  let nextReviewDate = previousProgress?.nextReviewDate || null;
+  let reviewLevel = previousProgress?.reviewLevel || 0;
+
+  if (!passed) {
+    nextReviewDate = new Date(now.getTime() + (REVIEW_FAIL_DAYS * 24 * 60 * 60 * 1000));
+    reviewLevel = Math.max(1, reviewLevel);
+  } else {
+    const wasReview = !!previousProgress?.nextReviewDate || (previousProgress?.reviewLevel || 0) > 0;
+    if (wasReview) {
+      reviewLevel += 1;
+      nextReviewDate = new Date(now.getTime() + (REVIEW_PASS_DAYS * 24 * 60 * 60 * 1000));
+    } else {
+      nextReviewDate = null;
+      reviewLevel = 0;
+    }
+  }
+
+  const progress = await progressRepository.saveQuizOutcome(userId, subjectId, lessonId, {
+    score,
+    passed,
+    completed: passed,
+    mastered: passed,
+    nextReviewDate,
+    reviewLevel,
+  });
 
   logger.info({
     event: "quiz_submitted",
@@ -248,8 +274,60 @@ async function submitQuiz(userId, payload) {
       mastered: passed,
       totalQuestions: questions.length,
       correctAnswers,
+      nextReviewDate,
+      reviewLevel,
       progress,
     },
+  };
+}
+
+async function getReviewRecommendations(userId) {
+  const dueProgressItems = await progressRepository.findDueReviewsByUserLean(userId, new Date());
+  if (!dueProgressItems.length) {
+    return {
+      statusCode: 200,
+      message: "No hay recomendaciones de repaso para hoy.",
+      data: [],
+    };
+  }
+
+  const subjects = await subjectRepository.findAllWithLessonsLean();
+  const lessonsByKey = new Map();
+
+  for (const subject of subjects) {
+    for (const lesson of subject.lessons) {
+      lessonsByKey.set(`${subject._id}-${lesson._id}`, {
+        subjectId: subject._id,
+        subjectName: subject.name,
+        lessonId: lesson._id,
+        lessonTitle: lesson.title,
+      });
+    }
+  }
+
+  const recommendations = dueProgressItems
+    .map((item) => {
+      const key = `${item.subjectId}-${item.lessonId}`;
+      const lessonInfo = lessonsByKey.get(key);
+      if (!lessonInfo) {
+        return null;
+      }
+
+      return {
+        subjectId: lessonInfo.subjectId,
+        subjectName: lessonInfo.subjectName,
+        lessonId: lessonInfo.lessonId,
+        lessonTitle: lessonInfo.lessonTitle,
+        reviewLevel: item.reviewLevel,
+        nextReviewDate: item.nextReviewDate,
+      };
+    })
+    .filter(Boolean);
+
+  return {
+    statusCode: 200,
+    message: "Recomendaciones de repaso generadas correctamente.",
+    data: recommendations,
   };
 }
 
@@ -257,4 +335,5 @@ module.exports = {
   completeLesson,
   calculateStreakOutcome,
   submitQuiz,
+  getReviewRecommendations,
 };

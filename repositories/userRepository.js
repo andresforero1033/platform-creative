@@ -16,6 +16,10 @@ async function findByIdLean(userId) {
   return User.findById(userId).lean();
 }
 
+async function findByRoleLean(role) {
+  return User.find({ role }).select("_id name email role").lean();
+}
+
 async function incrementUserPoints(userId, points) {
   return User.findByIdAndUpdate(userId, { $inc: { points } });
 }
@@ -80,6 +84,7 @@ module.exports = {
   createUser,
   findByEmailWithPassword,
   findByIdLean,
+  findByRoleLean,
   incrementUserPoints,
   updateActivityAndStreak,
   addBadgeToUser,

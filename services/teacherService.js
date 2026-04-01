@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const subjectRepository = require("../repositories/subjectRepository");
 
-async function addLessonToSubject(subjectId, payload) {
+async function addLessonToSubject(subjectId, payload, teacherId) {
   const { title, content } = payload;
 
   if (!mongoose.Types.ObjectId.isValid(subjectId)) {
@@ -13,7 +13,7 @@ async function addLessonToSubject(subjectId, payload) {
     throw new AppError("title y content son obligatorios.", 400);
   }
 
-  const subject = await subjectRepository.addLesson(subjectId, title, content);
+  const subject = await subjectRepository.addLesson(subjectId, title, content, teacherId);
 
   if (!subject) {
     throw new AppError("Materia no encontrada.", 404);
