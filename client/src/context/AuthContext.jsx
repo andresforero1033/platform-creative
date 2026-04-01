@@ -42,6 +42,17 @@ function readStoredUser() {
   }
 }
 
+function normalizeUser(user) {
+  if (!user) return null
+
+  return {
+    ...user,
+    badges: Array.isArray(user.badges) ? user.badges : [],
+    currentStreak: Number.isFinite(user.currentStreak) ? user.currentStreak : 0,
+    longestStreak: Number.isFinite(user.longestStreak) ? user.longestStreak : 0,
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => readStoredUser())
   const [loading, setLoading] = useState(true)
@@ -59,8 +70,9 @@ export function AuthProvider({ children }) {
     }
 
     if (payload.user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(payload.user))
-      setUser(payload.user)
+      const normalizedUser = normalizeUser(payload.user)
+      localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser))
+      setUser(normalizedUser)
     }
   }
 
@@ -133,7 +145,23 @@ export function AuthProvider({ children }) {
     })
 
     return {
+      user: normalizeUser(data.user),
+      dashboardPath: getDashboardPathByRole(data?.user?.role),
+    }
+  }
+
+  const register = async ({ name, email, password, role }) => {
+    const response = await api.post('/auth/register', { name, email, password, role })
+    const data = response?.data?.data || {}
+
+    persistSession({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
       user: data.user,
+    })
+
+    return {
+      user: normalizeUser(data.user),
       dashboardPath: getDashboardPathByRole(data?.user?.role),
     }
   }
@@ -161,6 +189,7 @@ export function AuthProvider({ children }) {
     loading,
     isAuthenticated,
     login,
+    register,
     logout,
     checkAuth,
     getDashboardPathByRole,

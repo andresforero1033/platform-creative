@@ -3,6 +3,8 @@ import Landing from './pages/Landing.jsx'
 import Login from './pages/auth/Login.jsx'
 import Register from './pages/auth/Register.jsx'
 import RoleDashboard from './pages/dashboard/RoleDashboard.jsx'
+import StudentDashboard from './pages/dashboard/StudentDashboard.jsx'
+import Profile from './pages/Profile.jsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 
 function App() {
@@ -15,7 +17,7 @@ function App() {
         path="/dashboard/student"
         element={(
           <ProtectedRoute allowedRoles={['student']}>
-            <RoleDashboard />
+            <StudentDashboard />
           </ProtectedRoute>
         )}
       />
@@ -48,6 +50,14 @@ function App() {
         element={(
           <ProtectedRoute allowedRoles={['admin']}>
             <RoleDashboard />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/profile"
+        element={(
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         )}
       />

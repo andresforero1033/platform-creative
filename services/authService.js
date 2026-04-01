@@ -60,6 +60,14 @@ function buildUserData(user) {
     email: user.email,
     role: user.role,
     points: user.points,
+    currentStreak: user.currentStreak || 0,
+    badges: Array.isArray(user.badges)
+      ? user.badges.map((badge) => ({
+        badgeId: badge.badgeId,
+        nombre: badge.nombre,
+        awardedAt: badge.awardedAt,
+      }))
+      : [],
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
