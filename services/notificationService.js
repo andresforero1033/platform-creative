@@ -1,6 +1,23 @@
 const notificationRepository = require("../repositories/notificationRepository");
 const progressRepository = require("../repositories/progressRepository");
 const userRepository = require("../repositories/userRepository");
+const socketService = require("./socketService");
+
+async function createNotification(payload) {
+  const notification = await notificationRepository.createNotification(payload);
+
+  socketService.sendToUser(payload.userId, "NEW_NOTIFICATION", {
+    id: notification._id,
+    userId: notification.userId,
+    type: notification.type,
+    title: notification.title,
+    message: notification.message,
+    metadata: notification.metadata,
+    createdAt: notification.createdAt,
+  });
+
+  return notification;
+}
 
 async function sendReviewReminders() {
   const now = new Date();
@@ -19,7 +36,7 @@ async function sendReviewReminders() {
     }
 
     for (const parent of parents) {
-      await notificationRepository.createNotification({
+      await createNotification({
         userId: parent._id,
         type: "system",
         title: "Recordatorio de repaso pendiente",
@@ -51,5 +68,6 @@ async function sendReviewReminders() {
 }
 
 module.exports = {
+  createNotification,
   sendReviewReminders,
 };

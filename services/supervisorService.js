@@ -4,7 +4,8 @@ const userRepository = require("../repositories/userRepository");
 const subjectRepository = require("../repositories/subjectRepository");
 const progressRepository = require("../repositories/progressRepository");
 const feedbackRepository = require("../repositories/feedbackRepository");
-const notificationRepository = require("../repositories/notificationRepository");
+const notificationService = require("./notificationService");
+const socketService = require("./socketService");
 
 function buildTeacherLessonMap(subjects) {
   const lessonTeacherMap = new Map();
@@ -157,7 +158,7 @@ async function createLessonFeedback(supervisorId, lessonId, content) {
     content: content.trim(),
   });
 
-  await notificationRepository.createNotification({
+  await notificationService.createNotification({
     userId: lesson.teacherId,
     type: "system",
     title: "Nueva observacion pedagogica",
@@ -168,6 +169,15 @@ async function createLessonFeedback(supervisorId, lessonId, content) {
       lessonId,
       lessonTitle: lesson.title,
     },
+  });
+
+  socketService.sendToUser(lesson.teacherId, "NEW_FEEDBACK", {
+    feedbackId: feedback._id,
+    lessonId,
+    subjectId: subject._id,
+    lessonTitle: lesson.title,
+    content: feedback.content,
+    createdAt: feedback.createdAt,
   });
 
   return {
