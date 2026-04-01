@@ -1,0 +1,20 @@
+{
+  "name": "platform-creative-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend base de Creative para despliegue en Render Free",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node -e \"console.log('Build step completado para Render Free')\"",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "mongoose": "^8.13.2"
+  }
+}
