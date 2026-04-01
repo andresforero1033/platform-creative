@@ -58,3 +58,36 @@ Los tests de integración usan `mongodb-memory-server`, por lo que no ensucian t
 ## Pipeline CI
 
 El workflow de GitHub Actions está en `.github/workflows/node.js.yml` y ejecuta tests en cada `push` o `pull_request` a `main`.
+
+## Sistema de Gamificación
+
+### Rachas diarias (Daily Streaks)
+
+La lógica vive en `services/progressService.js` y se ejecuta al completar una lección por primera vez.
+
+- Si la última actividad fue el mismo día: la racha se mantiene.
+- Si la última actividad fue ayer: la racha aumenta en +1.
+- Si pasaron más de 48 horas: la racha se reinicia a 1.
+- Cuando la racha alcanza un múltiplo de 7, se aplica un bono adicional de 20 puntos.
+
+Campos relacionados en `models/User.js`:
+
+- `lastActivity` (Date)
+- `currentStreak` (Number)
+- `badges` (Array)
+
+### Medallas automáticas (Badges)
+
+Componentes de la capa:
+
+- Modelo: `models/Badge.js`
+- Repositorio: `repositories/badgeRepository.js`
+- Servicio: `services/badgeService.js`
+
+Trigger actual:
+
+- Cuando un estudiante completa todas las lecciones de una materia, recibe la medalla `Maestro de [Nombre Materia]`.
+- El logro se persiste en `User.badges`.
+- Se genera una notificación de logro para seguimiento de padre/madre.
+
+Esta implementación mantiene el patrón por capas Route -> Controller -> Service -> Repository.
