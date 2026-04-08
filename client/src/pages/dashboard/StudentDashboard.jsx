@@ -5,11 +5,11 @@ import api from '../../api/axios'
 import useAuth from '../../hooks/useAuth'
 import SubjectCard from '../../components/dashboard/SubjectCard'
 import StreakCounter from '../../components/dashboard/StreakCounter'
-import { getFirstPendingLesson } from '../../utils/lessonProgress'
+import { getFirstPendingLesson, getMasteredLessonsCount } from '../../utils/lessonProgress'
 
 const MotionHeader = motion.header
 
-function buildMasteryBySubject(subjects = [], reviewItems = []) {
+function buildMasteryBySubject(subjects = [], reviewItems = [], userId) {
   const reviewBySubject = reviewItems.reduce((accumulator, item) => {
     const subjectId = item.subjectId || item.subject || item.subject_id
     if (!subjectId) return accumulator
@@ -29,7 +29,10 @@ function buildMasteryBySubject(subjects = [], reviewItems = []) {
 
     const dueReviews = reviewBySubject[subjectId] || 0
     const computedMastery = ((totalLessons - Math.min(dueReviews, totalLessons)) / totalLessons) * 100
-    accumulator[subjectId] = Math.max(0, Math.min(100, computedMastery))
+    const masteredLessonsLocal = getMasteredLessonsCount(userId, subjectId, subject.lessons || [])
+    const masteryFromLocal = (masteredLessonsLocal / totalLessons) * 100
+
+    accumulator[subjectId] = Math.max(0, Math.min(100, Math.max(computedMastery, masteryFromLocal)))
     return accumulator
   }, {})
 }
@@ -65,7 +68,7 @@ function StudentDashboard() {
 
         if (isMounted) {
           setSubjects(fetchedSubjects)
-          setMasteryBySubject(buildMasteryBySubject(fetchedSubjects, reviewItems))
+          setMasteryBySubject(buildMasteryBySubject(fetchedSubjects, reviewItems, userId))
         }
       } catch {
         if (isMounted) {
@@ -83,7 +86,34 @@ function StudentDashboard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [userId])
+
+  useEffect(() => {
+    const handleQuizMastered = (event) => {
+      const changedSubjectId = event?.detail?.subjectId
+      if (!changedSubjectId) return
+
+      const subject = subjects.find((item) => String(item?._id || item?.id) === String(changedSubjectId))
+      if (!subject) return
+
+      const totalLessons = Array.isArray(subject.lessons) ? subject.lessons.length : 0
+      if (totalLessons === 0) return
+
+      const masteredCount = getMasteredLessonsCount(userId, changedSubjectId, subject.lessons)
+      const localMastery = Math.round((masteredCount / totalLessons) * 100)
+
+      setMasteryBySubject((previous) => ({
+        ...previous,
+        [changedSubjectId]: Math.max(previous[changedSubjectId] || 0, localMastery),
+      }))
+    }
+
+    window.addEventListener('creative:quiz-mastered', handleQuizMastered)
+
+    return () => {
+      window.removeEventListener('creative:quiz-mastered', handleQuizMastered)
+    }
+  }, [subjects, userId])
 
   const hasSubjects = useMemo(() => subjects.length > 0, [subjects])
 

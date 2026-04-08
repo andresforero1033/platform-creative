@@ -7,6 +7,7 @@ const {
 } = require("../controllers/subjectController");
 const {
 	completeLesson,
+	getLessonQuiz,
 	submitQuiz,
 	getReviewRecommendations,
 } = require("../controllers/progressController");
@@ -21,6 +22,7 @@ router.get("/subjects/:subjectId/lessons/:lessonId", protect, authorize("student
 router.get("/subjects/:id/certificate", protect, authorize("student", "supervisor"), getSubjectCertificate);
 router.get("/subjects/:id/final-challenge", protect, authorize("student", "supervisor"), getFinalChallenge);
 router.get("/recommendations/review", protect, authorize("student", "supervisor"), getReviewRecommendations);
+router.get("/subjects/:subjectId/lessons/:lessonId/quiz", protect, authorize("student", "supervisor"), getLessonQuiz);
 router.post("/complete-lesson", protect, authorize("student", "supervisor"), completeLesson);
 router.post("/subjects/:subjectId/lessons/:lessonId/quiz/submit", protect, authorize("student", "supervisor"), submitQuiz);
 router.post("/subjects/:id/final-challenge/submit", protect, authorize("student", "supervisor"), submitFinalChallenge);

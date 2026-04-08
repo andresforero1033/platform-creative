@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../../api/axios'
 import useAuth from '../../hooks/useAuth'
+import QuizModal from '../../components/quiz/QuizModal'
 import {
   getCompletedLessonsCount,
   isLessonCompleted,
+  isLessonMastered,
   markLessonCompleted,
+  markLessonMastered,
 } from '../../utils/lessonProgress'
 
 function lessonIdOf(lesson) {
@@ -58,6 +61,16 @@ function LessonView() {
   const [lessons, setLessons] = useState([])
   const [isCompleting, setIsCompleting] = useState(false)
   const [isCurrentLessonCompleted, setIsCurrentLessonCompleted] = useState(false)
+  const [isCurrentLessonMastered, setIsCurrentLessonMastered] = useState(false)
+
+  const [quiz, setQuiz] = useState(null)
+  const [isQuizOpen, setIsQuizOpen] = useState(false)
+  const [isQuizLoading, setIsQuizLoading] = useState(false)
+  const [isQuizSubmitting, setIsQuizSubmitting] = useState(false)
+  const [quizSubmitError, setQuizSubmitError] = useState('')
+  const [quizResult, setQuizResult] = useState(null)
+  const [retryCountdown, setRetryCountdown] = useState(0)
+  const [quizSessionId, setQuizSessionId] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -84,6 +97,7 @@ function LessonView() {
         setLesson(payload.lesson || null)
         setLessons(Array.isArray(payload.lessons) ? payload.lessons : [])
         setIsCurrentLessonCompleted(isLessonCompleted(userId, subjectId, lessonId))
+        setIsCurrentLessonMastered(isLessonMastered(userId, subjectId, lessonId))
       } catch {
         if (isMounted) {
           setError('No pudimos cargar la leccion seleccionada.')
@@ -101,6 +115,16 @@ function LessonView() {
       isMounted = false
     }
   }, [lessonId, subjectId, userId])
+
+  useEffect(() => {
+    if (retryCountdown <= 0) return undefined
+
+    const timeoutId = window.setTimeout(() => {
+      setRetryCountdown((previous) => Math.max(0, previous - 1))
+    }, 1000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [retryCountdown])
 
   const currentLessonIndex = useMemo(
     () => lessons.findIndex((item) => String(lessonIdOf(item)) === String(lessonId)),
@@ -123,6 +147,73 @@ function LessonView() {
     navigate(`/subjects/${subjectId}/lessons/${targetLessonId}`)
   }
 
+  const openLessonQuiz = async () => {
+    if (!subjectId || !lessonId) return
+
+    setIsQuizLoading(true)
+    setQuizSubmitError('')
+    setQuizResult(null)
+
+    try {
+      const response = await api.get(`/student/subjects/${subjectId}/lessons/${lessonId}/quiz`)
+      const payload = response?.data?.data || null
+
+      setQuiz(payload)
+      setQuizSessionId((previous) => previous + 1)
+      setIsQuizOpen(true)
+    } catch (requestError) {
+      const backendMessage = requestError?.response?.data?.message
+      setError(backendMessage || 'No hay quiz disponible para esta leccion por ahora.')
+    } finally {
+      setIsQuizLoading(false)
+    }
+  }
+
+  const handleSubmitQuiz = async (answers) => {
+    if (!subjectId || !lessonId) return
+
+    setIsQuizSubmitting(true)
+    setQuizSubmitError('')
+
+    try {
+      const response = await api.post(`/student/subjects/${subjectId}/lessons/${lessonId}/quiz/submit`, {
+        answers,
+      })
+
+      const payload = response?.data?.data || null
+      setQuizResult(payload)
+
+      if (payload?.mastered) {
+        markLessonMastered(userId, subjectId, lessonId)
+        setIsCurrentLessonMastered(true)
+        setRetryCountdown(0)
+
+        window.dispatchEvent(new CustomEvent('creative:quiz-mastered', {
+          detail: {
+            subjectId,
+            lessonId,
+            score: payload?.score || 0,
+          },
+        }))
+      } else {
+        setRetryCountdown(8)
+      }
+    } catch (requestError) {
+      const backendMessage = requestError?.response?.data?.message
+      setQuizSubmitError(backendMessage || 'No se pudo enviar el quiz. Intenta nuevamente.')
+    } finally {
+      setIsQuizSubmitting(false)
+    }
+  }
+
+  const handleRetryQuiz = () => {
+    if (retryCountdown > 0) return
+
+    setQuizResult(null)
+    setQuizSubmitError('')
+    setQuizSessionId((previous) => previous + 1)
+  }
+
   const handleCompleteLesson = async () => {
     if (!subjectId || !lessonId || isCurrentLessonCompleted) return
 
@@ -137,6 +228,7 @@ function LessonView() {
 
       markLessonCompleted(userId, subjectId, lessonId)
       setIsCurrentLessonCompleted(true)
+      await openLessonQuiz()
     } catch {
       setError('No se pudo marcar esta leccion como completada.')
     } finally {
@@ -225,7 +317,18 @@ function LessonView() {
                       : 'Completar leccion'}
                 </button>
 
-                {isCurrentLessonCompleted ? (
+                <button
+                  type="button"
+                  onClick={openLessonQuiz}
+                  disabled={!isCurrentLessonCompleted || isQuizLoading}
+                  className="glass-cta-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isQuizLoading ? 'Cargando quiz...' : 'Abrir quiz'}
+                </button>
+
+                {isCurrentLessonMastered ? (
+                  <span className="glass-badge-purple">Leccion dominada</span>
+                ) : isCurrentLessonCompleted ? (
                   <span className="glass-badge-blue">Puedes avanzar a la siguiente leccion</span>
                 ) : (
                   <span className="text-sm font-semibold text-slate-600">
@@ -233,6 +336,12 @@ function LessonView() {
                   </span>
                 )}
               </div>
+
+              {quizResult && !quizResult.mastered ? (
+                <p className="mt-3 text-sm font-semibold text-amber-700">
+                  Sigue intentando. Reintento disponible {retryCountdown > 0 ? `en ${retryCountdown}s` : 'ahora'}.
+                </p>
+              ) : null}
 
               <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/60 pt-5">
                 <button
@@ -283,6 +392,7 @@ function LessonView() {
                   const itemLessonId = lessonIdOf(item)
                   const isActive = String(itemLessonId) === String(lessonId)
                   const isDone = isLessonCompleted(userId, subjectId, itemLessonId)
+                  const isMastered = isLessonMastered(userId, subjectId, itemLessonId)
 
                   return (
                     <li key={itemLessonId}>
@@ -296,7 +406,7 @@ function LessonView() {
                         </p>
                         <p className="mt-1 text-sm font-bold text-slate-900">{item.title}</p>
                         <p className="mt-1 text-xs font-semibold text-slate-600">
-                          {isDone ? 'Completada' : isActive ? 'En curso' : 'Pendiente'}
+                          {isMastered ? 'Dominada' : isDone ? 'Completada' : isActive ? 'En curso' : 'Pendiente'}
                         </p>
                       </button>
                     </li>
@@ -307,6 +417,19 @@ function LessonView() {
           </div>
         ) : null}
       </section>
+
+      <QuizModal
+        key={`${subjectId}-${lessonId}-${quizSessionId}`}
+        isOpen={isQuizOpen}
+        quiz={quiz}
+        isSubmitting={isQuizSubmitting}
+        submitError={quizSubmitError}
+        result={quizResult}
+        retryCountdown={retryCountdown}
+        onClose={() => setIsQuizOpen(false)}
+        onSubmit={handleSubmitQuiz}
+        onRetry={handleRetryQuiz}
+      />
     </main>
   )
 }

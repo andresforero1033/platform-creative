@@ -32,6 +32,23 @@ async function submitQuiz(req, res, next) {
   }
 }
 
+async function getLessonQuiz(req, res, next) {
+  try {
+    const result = await progressService.getLessonQuiz(req.user.id, {
+      subjectId: req.params.subjectId,
+      lessonId: req.params.lessonId,
+    });
+
+    return res.status(result.statusCode).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getReviewRecommendations(req, res, next) {
   try {
     const result = await progressService.getReviewRecommendations(req.user.id);
@@ -48,6 +65,7 @@ async function getReviewRecommendations(req, res, next) {
 
 module.exports = {
   completeLesson,
+  getLessonQuiz,
   submitQuiz,
   getReviewRecommendations,
 };

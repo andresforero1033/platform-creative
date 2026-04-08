@@ -1,11 +1,12 @@
-const STORAGE_PREFIX = 'creative_completed_lessons'
+const COMPLETED_STORAGE_PREFIX = 'creative_completed_lessons'
+const MASTERED_STORAGE_PREFIX = 'creative_mastered_lessons'
 
-function buildStorageKey(userId) {
-  return `${STORAGE_PREFIX}:${userId || 'anonymous'}`
+function buildStorageKey(prefix, userId) {
+  return `${prefix}:${userId || 'anonymous'}`
 }
 
-function readLessonProgressMap(userId) {
-  const raw = localStorage.getItem(buildStorageKey(userId))
+function readProgressMap(prefix, userId) {
+  const raw = localStorage.getItem(buildStorageKey(prefix, userId))
 
   if (!raw) return {}
 
@@ -17,8 +18,8 @@ function readLessonProgressMap(userId) {
   }
 }
 
-function writeLessonProgressMap(userId, payload) {
-  localStorage.setItem(buildStorageKey(userId), JSON.stringify(payload))
+function writeProgressMap(prefix, userId, payload) {
+  localStorage.setItem(buildStorageKey(prefix, userId), JSON.stringify(payload))
 }
 
 function makeLessonKey(subjectId, lessonId) {
@@ -28,16 +29,31 @@ function makeLessonKey(subjectId, lessonId) {
 export function isLessonCompleted(userId, subjectId, lessonId) {
   if (!subjectId || !lessonId) return false
 
-  const progress = readLessonProgressMap(userId)
+  const progress = readProgressMap(COMPLETED_STORAGE_PREFIX, userId)
   return !!progress[makeLessonKey(subjectId, lessonId)]
 }
 
 export function markLessonCompleted(userId, subjectId, lessonId) {
   if (!subjectId || !lessonId) return
 
-  const progress = readLessonProgressMap(userId)
+  const progress = readProgressMap(COMPLETED_STORAGE_PREFIX, userId)
   progress[makeLessonKey(subjectId, lessonId)] = true
-  writeLessonProgressMap(userId, progress)
+  writeProgressMap(COMPLETED_STORAGE_PREFIX, userId, progress)
+}
+
+export function isLessonMastered(userId, subjectId, lessonId) {
+  if (!subjectId || !lessonId) return false
+
+  const progress = readProgressMap(MASTERED_STORAGE_PREFIX, userId)
+  return !!progress[makeLessonKey(subjectId, lessonId)]
+}
+
+export function markLessonMastered(userId, subjectId, lessonId) {
+  if (!subjectId || !lessonId) return
+
+  const progress = readProgressMap(MASTERED_STORAGE_PREFIX, userId)
+  progress[makeLessonKey(subjectId, lessonId)] = true
+  writeProgressMap(MASTERED_STORAGE_PREFIX, userId, progress)
 }
 
 export function getCompletedLessonsCount(userId, subjectId, lessons = []) {
@@ -46,6 +62,15 @@ export function getCompletedLessonsCount(userId, subjectId, lessons = []) {
     if (!lessonId) return acc
 
     return isLessonCompleted(userId, subjectId, lessonId) ? acc + 1 : acc
+  }, 0)
+}
+
+export function getMasteredLessonsCount(userId, subjectId, lessons = []) {
+  return lessons.reduce((acc, lesson) => {
+    const lessonId = lesson?._id || lesson?.id
+    if (!lessonId) return acc
+
+    return isLessonMastered(userId, subjectId, lessonId) ? acc + 1 : acc
   }, 0)
 }
 

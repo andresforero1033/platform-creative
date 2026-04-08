@@ -80,6 +80,87 @@ async function processSubjectBadgeTrigger(userId, subject) {
   return badgeService.awardSubjectMasterBadge(userId, subject);
 }
 
+async function processSubjectMasteryBadgeTrigger(userId, subject) {
+  const totalLessons = subject.lessons.length;
+  if (totalLessons === 0) {
+    return null;
+  }
+
+  const masteredLessons = await progressRepository.countMasteredLessonsBySubject(userId, subject._id);
+
+  if (masteredLessons !== totalLessons) {
+    return null;
+  }
+
+  return badgeService.awardSubjectMasterBadge(userId, subject);
+}
+
+function sanitizeQuizQuestions(questions, questionIds) {
+  const questionMap = new Map(questions.map((question) => [String(question._id), question]));
+
+  return questionIds
+    .map((questionId) => questionMap.get(String(questionId)))
+    .filter(Boolean)
+    .map((question) => ({
+      id: question._id,
+      prompt: question.prompt,
+      options: question.options,
+      explanation: question.explanation,
+    }));
+}
+
+async function getLessonQuiz(userId, payload) {
+  const { subjectId, lessonId } = payload;
+
+  if (!subjectId || !lessonId) {
+    throw new AppError("subjectId y lessonId son obligatorios.", 400);
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(subjectId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
+    throw new AppError("subjectId o lessonId tiene formato invalido.", 400);
+  }
+
+  const subject = await subjectRepository.findByIdWithLessonsLean(subjectId);
+
+  if (!subject) {
+    throw new AppError("Materia no encontrada.", 404);
+  }
+
+  const lesson = subject.lessons.find((item) => String(item._id) === String(lessonId));
+  if (!lesson) {
+    throw new AppError("Leccion no encontrada en la materia indicada.", 404);
+  }
+
+  const quiz = await quizRepository.findBySubjectAndLessonLean(subjectId, lessonId);
+  if (!quiz) {
+    throw new AppError("Quiz no disponible para esta leccion.", 404);
+  }
+
+  const questions = await questionRepository.findByIdsLean(quiz.questionIds);
+  if (!questions.length) {
+    throw new AppError("El quiz no tiene preguntas configuradas.", 400);
+  }
+
+  const progress = await progressRepository.findOneLean({
+    userId,
+    subjectId,
+    lessonId,
+  });
+
+  return {
+    statusCode: 200,
+    message: "Quiz de leccion obtenido correctamente.",
+    data: {
+      subjectId,
+      lessonId,
+      title: quiz.title,
+      passingScore: quiz.passingScore,
+      alreadyMastered: !!progress?.mastered,
+      questions: sanitizeQuizQuestions(questions, quiz.questionIds),
+    },
+  };
+}
+
 async function completeLesson(userId, payload) {
   const { subjectId, lessonId } = payload;
 
@@ -223,7 +304,8 @@ async function submitQuiz(userId, payload) {
   }
 
   const score = Math.round((correctAnswers / questions.length) * 100);
-  const passed = score > 70;
+  const passingScore = Number.isFinite(quiz.passingScore) ? quiz.passingScore : 70;
+  const passed = score > passingScore;
   const previousProgress = await progressRepository.findOneLean({ userId, subjectId, lessonId });
   const now = new Date();
 
@@ -253,6 +335,27 @@ async function submitQuiz(userId, payload) {
     reviewLevel,
   });
 
+  const lesson = subject.lessons.find((item) => String(item._id) === String(lessonId));
+
+  let earnedBadge = null;
+  if (passed) {
+    const badgeResult = await processSubjectMasteryBadgeTrigger(userId, subject);
+
+    if (badgeResult?.awarded && badgeResult.badge) {
+      earnedBadge = {
+        badgeId: badgeResult.badge._id,
+        nombre: badgeResult.badge.nombre,
+        tier: "subject_master",
+      };
+    } else {
+      earnedBadge = {
+        badgeId: null,
+        nombre: `Dominio de ${lesson?.title || "Leccion"}`,
+        tier: "lesson_mastery",
+      };
+    }
+  }
+
   logger.info({
     event: "quiz_submitted",
     userId,
@@ -276,6 +379,7 @@ async function submitQuiz(userId, payload) {
       correctAnswers,
       nextReviewDate,
       reviewLevel,
+      earnedBadge,
       progress,
     },
   };
@@ -333,6 +437,7 @@ async function getReviewRecommendations(userId) {
 
 module.exports = {
   completeLesson,
+  getLessonQuiz,
   calculateStreakOutcome,
   submitQuiz,
   getReviewRecommendations,
