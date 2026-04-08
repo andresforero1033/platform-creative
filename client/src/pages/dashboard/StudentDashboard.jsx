@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import useAuth from '../../hooks/useAuth'
 import SubjectCard from '../../components/dashboard/SubjectCard'
 import StreakCounter from '../../components/dashboard/StreakCounter'
+import { getFirstPendingLesson } from '../../utils/lessonProgress'
 
 const MotionHeader = motion.header
 
@@ -34,10 +36,12 @@ function buildMasteryBySubject(subjects = [], reviewItems = []) {
 
 function StudentDashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [subjects, setSubjects] = useState([])
   const [masteryBySubject, setMasteryBySubject] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const userId = user?.id || user?._id
 
   useEffect(() => {
     let isMounted = true
@@ -82,6 +86,18 @@ function StudentDashboard() {
   }, [])
 
   const hasSubjects = useMemo(() => subjects.length > 0, [subjects])
+
+  const handleOpenLesson = (subject) => {
+    const firstPendingLesson = getFirstPendingLesson(subject, userId)
+    const subjectId = subject?._id || subject?.id
+    const lessonId = firstPendingLesson?._id || firstPendingLesson?.id
+
+    if (!subjectId || !lessonId) {
+      return
+    }
+
+    navigate(`/subjects/${subjectId}/lessons/${lessonId}`)
+  }
 
   return (
     <main className="app-shell overflow-hidden py-10">
@@ -144,6 +160,7 @@ function StudentDashboard() {
                     subject={subject}
                     mastery={masteryBySubject[subjectId] || 0}
                     index={index}
+                    onOpenLesson={handleOpenLesson}
                   />
                 )
               })}

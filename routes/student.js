@@ -2,6 +2,7 @@ const express = require("express");
 const {
 	getSubjects,
 	getSubjectById,
+	getSubjectLesson,
 	getSubjectCertificate,
 } = require("../controllers/subjectController");
 const {
@@ -16,6 +17,7 @@ const router = express.Router();
 
 router.get("/subjects", protect, authorize("student", "teacher", "supervisor"), getSubjects);
 router.get("/subjects/:id", protect, authorize("student", "teacher", "supervisor"), getSubjectById);
+router.get("/subjects/:subjectId/lessons/:lessonId", protect, authorize("student", "teacher", "supervisor"), getSubjectLesson);
 router.get("/subjects/:id/certificate", protect, authorize("student", "supervisor"), getSubjectCertificate);
 router.get("/subjects/:id/final-challenge", protect, authorize("student", "supervisor"), getFinalChallenge);
 router.get("/recommendations/review", protect, authorize("student", "supervisor"), getReviewRecommendations);

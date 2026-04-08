@@ -2,8 +2,15 @@ import { motion } from 'framer-motion'
 
 const MotionArticle = motion.article
 
-function SubjectCard({ subject, mastery = 0, index = 0 }) {
+function SubjectCard({ subject, mastery = 0, index = 0, onOpenLesson }) {
   const masterySafe = Math.max(0, Math.min(100, Math.round(mastery)))
+  const hasLessons = Array.isArray(subject?.lessons) && subject.lessons.length > 0
+
+  const handleOpenLesson = () => {
+    if (typeof onOpenLesson === 'function' && hasLessons) {
+      onOpenLesson(subject)
+    }
+  }
 
   return (
     <MotionArticle
@@ -30,6 +37,15 @@ function SubjectCard({ subject, mastery = 0, index = 0 }) {
           style={{ width: `${masterySafe}%` }}
         />
       </div>
+
+      <button
+        type="button"
+        onClick={handleOpenLesson}
+        disabled={!hasLessons}
+        className="glass-cta-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {hasLessons ? 'Continuar aprendizaje' : 'Sin lecciones disponibles'}
+      </button>
     </MotionArticle>
   )
 }

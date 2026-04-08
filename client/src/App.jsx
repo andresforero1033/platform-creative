@@ -7,6 +7,7 @@ import TeacherDashboard from './pages/dashboard/TeacherDashboard.jsx'
 import SupervisorDashboard from './pages/dashboard/SupervisorDashboard.jsx'
 import ParentDashboard from './pages/dashboard/ParentDashboard.jsx'
 import AdminDashboard from './pages/dashboard/AdminDashboard.jsx'
+import LessonView from './pages/lessons/LessonView.jsx'
 import Profile from './pages/Profile.jsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 
@@ -53,6 +54,14 @@ function App() {
         element={(
           <ProtectedRoute allowedRoles={['admin']}>
             <AdminDashboard />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/subjects/:subjectId/lessons/:lessonId"
+        element={(
+          <ProtectedRoute allowedRoles={['student']}>
+            <LessonView />
           </ProtectedRoute>
         )}
       />

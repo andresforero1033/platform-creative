@@ -29,6 +29,23 @@ async function getSubjectById(req, res, next) {
   }
 }
 
+async function getSubjectLesson(req, res, next) {
+  try {
+    const result = await subjectService.getSubjectLesson(
+      req.params.subjectId,
+      req.params.lessonId
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getSubjectCertificate(req, res, next) {
   try {
     const result = await certificateService.generateSubjectCertificate(req.user.id, req.params.id);
@@ -45,5 +62,6 @@ async function getSubjectCertificate(req, res, next) {
 module.exports = {
   getSubjects,
   getSubjectById,
+  getSubjectLesson,
   getSubjectCertificate,
 };
