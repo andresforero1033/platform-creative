@@ -20,6 +20,20 @@ async function findByRoleLean(role) {
   return User.find({ role }).select("_id name email role").lean();
 }
 
+async function findAllLean() {
+  return User.find({}).select("_id name email role").lean();
+}
+
+async function findParentsByChildIdLean(childId) {
+  return User.find({
+    role: "parent",
+    $or: [
+      { childrenIds: childId },
+      { "profile.childrenIds": childId },
+    ],
+  }).select("_id name email role").lean();
+}
+
 async function findManyByIdsLean(userIds, role) {
   const filter = {
     _id: { $in: userIds },
@@ -108,6 +122,8 @@ module.exports = {
   findByEmailWithPassword,
   findByIdLean,
   findByRoleLean,
+  findAllLean,
+  findParentsByChildIdLean,
   findManyByIdsLean,
   aggregateUsersByRole,
   incrementUserPoints,

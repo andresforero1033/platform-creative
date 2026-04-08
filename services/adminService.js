@@ -25,6 +25,19 @@ async function triggerReminders() {
   return notificationService.sendReviewReminders();
 }
 
+async function sendGlobalMessage(adminId, payload) {
+  const title = payload?.title;
+  const message = payload?.message;
+  const targetRole = payload?.targetRole;
+
+  return notificationService.sendGlobalMessage({
+    senderId: adminId,
+    title,
+    message,
+    targetRole,
+  });
+}
+
 async function getUsersByRoleMetrics() {
   const aggregateRows = await userRepository.aggregateUsersByRole();
   const byRole = buildRoleCountMap(aggregateRows);
@@ -44,5 +57,6 @@ async function getUsersByRoleMetrics() {
 
 module.exports = {
   triggerReminders,
+  sendGlobalMessage,
   getUsersByRoleMetrics,
 };

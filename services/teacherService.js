@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const subjectRepository = require("../repositories/subjectRepository");
 const feedbackRepository = require("../repositories/feedbackRepository");
+const userRepository = require("../repositories/userRepository");
+const notificationService = require("./notificationService");
 
 async function addLessonToSubject(subjectId, payload, teacherId) {
   const { title, content } = payload;
@@ -18,6 +20,30 @@ async function addLessonToSubject(subjectId, payload, teacherId) {
 
   if (!subject) {
     throw new AppError("Materia no encontrada.", 404);
+  }
+
+  const lessons = Array.isArray(subject.lessons) ? subject.lessons : [];
+  const createdLesson = lessons.length > 0 ? lessons[lessons.length - 1] : null;
+
+  if (createdLesson) {
+    const students = await userRepository.findByRoleLean("student");
+
+    await Promise.all(
+      students.map((student) => notificationService.createNotification({
+        userId: student._id,
+        type: "system",
+        title: `Nueva leccion: ${title}`,
+        message: `Ya esta disponible una nueva leccion en ${subject.name}.`,
+        metadata: {
+          eventName: "new_lesson",
+          redirectPath: `/subjects/${subject._id}/lessons/${createdLesson._id}`,
+          subjectId: subject._id,
+          lessonId: createdLesson._id,
+          lessonTitle: createdLesson.title,
+          subjectName: subject.name,
+        },
+      }))
+    );
   }
 
   return {

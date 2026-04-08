@@ -17,6 +17,7 @@ const studentRoutes = require("./routes/student");
 const teacherRoutes = require("./routes/teacher");
 const parentRoutes = require("./routes/parent");
 const adminRoutes = require("./routes/admin");
+const notificationRoutes = require("./routes/notifications");
 const errorHandler = require("./middleware/errorHandler");
 const { logger, accessLogStream } = require("./config/logger");
 
@@ -87,6 +88,7 @@ function createApp() {
   app.use("/api/teacher", teacherRoutes);
   app.use("/api/parent", parentRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/notifications", notificationRoutes);
 
   app.get("/", (_req, res) => {
     res.status(200).json({

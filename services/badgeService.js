@@ -1,6 +1,6 @@
 const badgeRepository = require("../repositories/badgeRepository");
 const userRepository = require("../repositories/userRepository");
-const notificationRepository = require("../repositories/notificationRepository");
+const notificationService = require("./notificationService");
 const { logger } = require("../config/logger");
 
 function buildSubjectMasterBadgePayload(subject) {
@@ -21,6 +21,54 @@ function buildGrandMasterBadgePayload(subject) {
   };
 }
 
+async function notifyStudentAndParents(studentId, badge, subject, tier) {
+  await notificationService.createNotification({
+    userId: studentId,
+    type: "achievement",
+    title: `Logro desbloqueado: ${badge.nombre}`,
+    message: `Felicidades, obtuviste la medalla ${badge.nombre}.`,
+    metadata: {
+      eventName: "badge_earned",
+      redirectPath: "/dashboard/student",
+      badgeId: badge._id,
+      subjectId: subject._id,
+      subjectName: subject.name,
+      tier,
+    },
+  });
+
+  const [student, parents] = await Promise.all([
+    userRepository.findByIdLean(studentId),
+    userRepository.findParentsByChildIdLean(studentId),
+  ]);
+
+  if (!parents.length) {
+    return;
+  }
+
+  const studentName = student?.name || "Tu hijo/a";
+
+  await Promise.all(
+    parents.map((parent) => notificationService.createNotification({
+      userId: parent._id,
+      type: "achievement",
+      title: `Logro de ${studentName}: ${badge.nombre}`,
+      message: `${studentName} obtuvo una nueva medalla en ${subject.name}.`,
+      metadata: {
+        eventName: "badge_earned",
+        redirectPath: "/dashboard/parent",
+        studentId,
+        studentName,
+        badgeId: badge._id,
+        badgeName: badge.nombre,
+        subjectId: subject._id,
+        subjectName: subject.name,
+        tier,
+      },
+    }))
+  );
+}
+
 async function awardSubjectMasterBadge(studentId, subject) {
   const badgePayload = buildSubjectMasterBadgePayload(subject);
   const badge = await badgeRepository.upsertByNombre(badgePayload);
@@ -35,17 +83,7 @@ async function awardSubjectMasterBadge(studentId, subject) {
     return { awarded: false, badge: null };
   }
 
-  await notificationRepository.createNotification({
-    userId: studentId,
-    type: "achievement",
-    title: `Logro desbloqueado: ${badge.nombre}`,
-    message: `Notificacion para padre/madre: el estudiante obtuvo la medalla ${badge.nombre}.`,
-    metadata: {
-      badgeId: badge._id,
-      subjectId: subject._id,
-      subjectName: subject.name,
-    },
-  });
+  await notifyStudentAndParents(studentId, badge, subject, "subject_master");
 
   logger.info({
     event: "badge_awarded",
@@ -75,18 +113,7 @@ async function awardGrandMasterBadge(studentId, subject) {
     return { awarded: false, badge: null };
   }
 
-  await notificationRepository.createNotification({
-    userId: studentId,
-    type: "achievement",
-    title: `Logro desbloqueado: ${badge.nombre}`,
-    message: `Notificacion para padre/madre: el estudiante obtuvo la medalla especial ${badge.nombre}.`,
-    metadata: {
-      badgeId: badge._id,
-      subjectId: subject._id,
-      subjectName: subject.name,
-      tier: "grand_master",
-    },
-  });
+  await notifyStudentAndParents(studentId, badge, subject, "grand_master");
 
   logger.info({
     event: "grand_master_badge_awarded",

@@ -43,6 +43,10 @@ function AdminDashboard() {
   const [triggering, setTriggering] = useState(false)
   const [triggerResult, setTriggerResult] = useState(null)
   const [triggerError, setTriggerError] = useState('')
+  const [globalForm, setGlobalForm] = useState({ title: '', message: '' })
+  const [sendingGlobalMessage, setSendingGlobalMessage] = useState(false)
+  const [globalResult, setGlobalResult] = useState(null)
+  const [globalError, setGlobalError] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -98,6 +102,41 @@ function AdminDashboard() {
       setTriggerError('No se pudieron enviar los recordatorios en este momento.')
     } finally {
       setTriggering(false)
+    }
+  }
+
+  const handleGlobalInputChange = (event) => {
+    const { name, value } = event.target
+    setGlobalForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }))
+    setGlobalError('')
+  }
+
+  const handleSendGlobalMessage = async (event) => {
+    event.preventDefault()
+
+    if (!globalForm.message.trim()) {
+      setGlobalError('Escribe un mensaje para enviar al ecosistema.')
+      return
+    }
+
+    setSendingGlobalMessage(true)
+    setGlobalError('')
+
+    try {
+      const response = await api.post('/admin/broadcast-message', {
+        title: globalForm.title.trim(),
+        message: globalForm.message.trim(),
+      })
+
+      setGlobalResult(response?.data?.data || null)
+      setGlobalForm({ title: '', message: '' })
+    } catch {
+      setGlobalError('No se pudo enviar el mensaje global en este momento.')
+    } finally {
+      setSendingGlobalMessage(false)
     }
   }
 
@@ -193,6 +232,55 @@ function AdminDashboard() {
                   Recordatorios enviados: <span className="font-bold text-slate-900">{triggerResult?.remindersSent || 0}</span>
                 </p>
               </article>
+
+              <div className="mt-6 border-t border-white/60 pt-5">
+                <h3 className="text-lg font-black text-slate-900">Mensaje global</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Envia alertas generales a toda la plataforma en tiempo real.
+                </p>
+
+                <form className="mt-4 space-y-3" onSubmit={handleSendGlobalMessage}>
+                  <input
+                    type="text"
+                    name="title"
+                    value={globalForm.title}
+                    onChange={handleGlobalInputChange}
+                    className="glass-input"
+                    placeholder="Titulo del aviso (opcional)"
+                  />
+
+                  <textarea
+                    name="message"
+                    value={globalForm.message}
+                    onChange={handleGlobalInputChange}
+                    className="glass-input min-h-[100px] resize-y"
+                    placeholder="Mensaje global para todos los usuarios"
+                    required
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={sendingGlobalMessage}
+                    className="glass-cta-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {sendingGlobalMessage ? 'Enviando mensaje...' : 'Enviar mensaje global'}
+                  </button>
+                </form>
+
+                {globalError ? <p className="glass-error mt-3">{globalError}</p> : null}
+
+                {globalResult ? (
+                  <article className="glass-card mt-3 border-brand-purple/25 p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Ultimo broadcast</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">
+                      {formatDateTime(globalResult.processedAt)}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Destinatarios alcanzados: <span className="font-bold text-slate-900">{globalResult.recipients || 0}</span>
+                    </p>
+                  </article>
+                ) : null}
+              </div>
             </section>
           </div>
         ) : null}

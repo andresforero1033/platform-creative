@@ -1,8 +1,8 @@
-const adminService = require("../services/adminService");
+const notificationCenterService = require("../services/notificationCenterService");
 
-async function triggerReminders(req, res, next) {
+async function getMyNotifications(req, res, next) {
   try {
-    const result = await adminService.triggerReminders();
+    const result = await notificationCenterService.getMyNotifications(req.user.id);
 
     return res.status(result.statusCode).json({
       success: true,
@@ -14,9 +14,9 @@ async function triggerReminders(req, res, next) {
   }
 }
 
-async function getUsersByRoleMetrics(req, res, next) {
+async function markNotificationRead(req, res, next) {
   try {
-    const result = await adminService.getUsersByRoleMetrics();
+    const result = await notificationCenterService.markNotificationRead(req.user.id, req.params.id);
 
     return res.status(result.statusCode).json({
       success: true,
@@ -28,9 +28,9 @@ async function getUsersByRoleMetrics(req, res, next) {
   }
 }
 
-async function sendGlobalMessage(req, res, next) {
+async function markAllNotificationsRead(req, res, next) {
   try {
-    const result = await adminService.sendGlobalMessage(req.user.id, req.body);
+    const result = await notificationCenterService.markAllNotificationsRead(req.user.id);
 
     return res.status(result.statusCode).json({
       success: true,
@@ -43,7 +43,7 @@ async function sendGlobalMessage(req, res, next) {
 }
 
 module.exports = {
-  triggerReminders,
-  getUsersByRoleMetrics,
-  sendGlobalMessage,
+  getMyNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
 };
