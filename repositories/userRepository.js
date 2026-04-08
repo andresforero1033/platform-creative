@@ -20,6 +20,29 @@ async function findByRoleLean(role) {
   return User.find({ role }).select("_id name email role").lean();
 }
 
+async function findManyByIdsLean(userIds, role) {
+  const filter = {
+    _id: { $in: userIds },
+  };
+
+  if (role) {
+    filter.role = role;
+  }
+
+  return User.find(filter).lean();
+}
+
+async function aggregateUsersByRole() {
+  return User.aggregate([
+    {
+      $group: {
+        _id: "$role",
+        total: { $sum: 1 },
+      },
+    },
+  ]);
+}
+
 async function incrementUserPoints(userId, points) {
   return User.findByIdAndUpdate(userId, { $inc: { points } });
 }
@@ -85,6 +108,8 @@ module.exports = {
   findByEmailWithPassword,
   findByIdLean,
   findByRoleLean,
+  findManyByIdsLean,
+  aggregateUsersByRole,
   incrementUserPoints,
   updateActivityAndStreak,
   addBadgeToUser,

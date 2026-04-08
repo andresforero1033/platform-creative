@@ -1,12 +1,20 @@
 const express = require("express");
 const { protect, authorize } = require("../middleware/auth");
 const {
+  getParentDashboard,
   getStudentProgress,
   getParentNotifications,
   getWeeklyReport,
 } = require("../controllers/parentController");
 
 const router = express.Router();
+
+router.get(
+  "/dashboard",
+  protect,
+  authorize("parent", "supervisor"),
+  getParentDashboard
+);
 
 router.get(
   "/progress/:studentId",

@@ -2,8 +2,11 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Landing from './pages/Landing.jsx'
 import Login from './pages/auth/Login.jsx'
 import Register from './pages/auth/Register.jsx'
-import RoleDashboard from './pages/dashboard/RoleDashboard.jsx'
 import StudentDashboard from './pages/dashboard/StudentDashboard.jsx'
+import TeacherDashboard from './pages/dashboard/TeacherDashboard.jsx'
+import SupervisorDashboard from './pages/dashboard/SupervisorDashboard.jsx'
+import ParentDashboard from './pages/dashboard/ParentDashboard.jsx'
+import AdminDashboard from './pages/dashboard/AdminDashboard.jsx'
 import Profile from './pages/Profile.jsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 
@@ -25,7 +28,7 @@ function App() {
         path="/dashboard/teacher"
         element={(
           <ProtectedRoute allowedRoles={['teacher']}>
-            <RoleDashboard />
+            <TeacherDashboard />
           </ProtectedRoute>
         )}
       />
@@ -33,7 +36,7 @@ function App() {
         path="/dashboard/parent"
         element={(
           <ProtectedRoute allowedRoles={['parent']}>
-            <RoleDashboard />
+            <ParentDashboard />
           </ProtectedRoute>
         )}
       />
@@ -41,7 +44,7 @@ function App() {
         path="/dashboard/supervisor"
         element={(
           <ProtectedRoute allowedRoles={['supervisor']}>
-            <RoleDashboard />
+            <SupervisorDashboard />
           </ProtectedRoute>
         )}
       />
@@ -49,7 +52,7 @@ function App() {
         path="/dashboard/admin"
         element={(
           <ProtectedRoute allowedRoles={['admin']}>
-            <RoleDashboard />
+            <AdminDashboard />
           </ProtectedRoute>
         )}
       />
