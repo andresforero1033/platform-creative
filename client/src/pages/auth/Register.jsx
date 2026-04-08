@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import useAuth from '../../hooks/useAuth'
+
+const MotionSection = motion.section
 
 const AVAILABLE_ROLES = [
   { value: 'student', label: 'Estudiante' },
@@ -82,20 +85,30 @@ function Register() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-12">
-      <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl">
-        <h1 className="text-3xl font-black text-slate-900">Crear cuenta</h1>
+    <main className="auth-shell">
+      <div className="auth-glow-blue" />
+      <div className="auth-glow-purple" />
+      <div className="auth-glow-yellow" />
+
+      <MotionSection
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+        className="glass-panel w-full max-w-md p-8"
+      >
+        <p className="glass-badge-blue">Nuevo Usuario</p>
+        <h1 className="mt-4 text-3xl font-black text-slate-900">Crear cuenta</h1>
         <p className="mt-2 text-sm text-slate-600">Crea tu cuenta para comenzar tu recorrido de aprendizaje.</p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="name" className="mb-1 block text-sm font-semibold text-slate-700">Nombre</label>
+            <label htmlFor="name" className="glass-input-label">Nombre</label>
             <input
               id="name"
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="glass-input"
               type="text"
               placeholder="Tu nombre"
               autoComplete="name"
@@ -105,13 +118,13 @@ function Register() {
           </div>
 
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-semibold text-slate-700">Email</label>
+            <label htmlFor="email" className="glass-input-label">Email</label>
             <input
               id="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="glass-input"
               type="email"
               placeholder="tu@email.com"
               autoComplete="email"
@@ -121,13 +134,13 @@ function Register() {
           </div>
 
           <div>
-            <label htmlFor="role" className="mb-1 block text-sm font-semibold text-slate-700">Rol</label>
+            <label htmlFor="role" className="glass-input-label">Rol</label>
             <select
               id="role"
               name="role"
               value={form.role}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+              className="glass-select"
             >
               {AVAILABLE_ROLES.map((role) => (
                 <option key={role.value} value={role.value}>{role.label}</option>
@@ -137,13 +150,13 @@ function Register() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-semibold text-slate-700">Password</label>
+            <label htmlFor="password" className="glass-input-label">Password</label>
             <input
               id="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="glass-input"
               type="password"
               placeholder="Minimo 8 caracteres"
               autoComplete="new-password"
@@ -153,13 +166,13 @@ function Register() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="mb-1 block text-sm font-semibold text-slate-700">Confirmar password</label>
+            <label htmlFor="confirmPassword" className="glass-input-label">Confirmar password</label>
             <input
               id="confirmPassword"
               name="confirmPassword"
               value={form.confirmPassword}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="glass-input"
               type="password"
               placeholder="Repite tu password"
               autoComplete="new-password"
@@ -169,7 +182,7 @@ function Register() {
           </div>
 
           {submitError ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+            <p className="glass-error">
               {submitError}
             </p>
           ) : null}
@@ -177,16 +190,17 @@ function Register() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl bg-brand-purple px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="glass-cta-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
           >
             {submitting ? 'Creando cuenta...' : 'Registrarme'}
           </button>
         </form>
 
         <p className="mt-6 text-sm text-slate-600">
-          Ya tienes cuenta? <Link to="/login" className="font-semibold text-brand-blue">Inicia sesion</Link>
+          Ya tienes cuenta?{' '}
+          <Link to="/login" className="glass-link-blue">Inicia sesion</Link>
         </p>
-      </section>
+      </MotionSection>
     </main>
   )
 }

@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import useAuth from '../../hooks/useAuth'
+
+const MotionSection = motion.section
 
 function Login() {
   const navigate = useNavigate()
@@ -38,20 +41,30 @@ function Login() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-12">
-      <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl">
-        <h1 className="text-3xl font-black text-slate-900">Iniciar sesion</h1>
+    <main className="auth-shell">
+      <div className="auth-glow-blue" />
+      <div className="auth-glow-purple" />
+      <div className="auth-glow-yellow" />
+
+      <MotionSection
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+        className="glass-panel w-full max-w-md p-8"
+      >
+        <p className="glass-badge-purple">Acceso Seguro</p>
+        <h1 className="mt-4 text-3xl font-black text-slate-900">Iniciar sesion</h1>
         <p className="mt-2 text-sm text-slate-600">Accede para continuar tu experiencia educativa personalizada.</p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-700" htmlFor="email">Email</label>
+            <label className="glass-input-label" htmlFor="email">Email</label>
             <input
               id="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="glass-input"
               type="email"
               placeholder="tu@email.com"
               autoComplete="email"
@@ -60,13 +73,13 @@ function Login() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-700" htmlFor="password">Password</label>
+            <label className="glass-input-label" htmlFor="password">Password</label>
             <input
               id="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="glass-input"
               type="password"
               placeholder="Tu password"
               autoComplete="current-password"
@@ -75,7 +88,7 @@ function Login() {
           </div>
 
           {errorMessage ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+            <p className="glass-error">
               {errorMessage}
             </p>
           ) : null}
@@ -83,16 +96,17 @@ function Login() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl bg-brand-blue px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="glass-cta-blue w-full disabled:cursor-not-allowed disabled:opacity-70"
           >
             {submitting ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
         <p className="mt-6 text-sm text-slate-600">
-          Aun no tienes cuenta? <Link to="/register" className="font-semibold text-brand-purple">Crear cuenta</Link>
+          Aun no tienes cuenta?{' '}
+          <Link to="/register" className="glass-link-purple">Crear cuenta</Link>
         </p>
-      </section>
+      </MotionSection>
     </main>
   )
 }

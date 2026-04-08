@@ -12,10 +12,16 @@ function Team() {
   ]
 
   return (
-    <section id="equipo" className="px-6 pb-24">
-      <div className="mx-auto w-full max-w-6xl">
-        <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Equipo de Trabajo</h2>
-        <p className="mt-3 max-w-2xl text-slate-700">
+    <section id="equipo" className="relative overflow-hidden pb-24">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-0 top-1/3 h-44 w-44 rounded-full bg-brand-blue/15 blur-3xl" />
+        <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-brand-purple/15 blur-3xl" />
+      </div>
+
+      <div className="app-content">
+        <p className="glass-badge-blue">Equipo</p>
+        <h2 className="text-3xl font-black text-slate-900 md:text-5xl">Equipo de Trabajo</h2>
+        <p className="mt-3 max-w-2xl text-slate-700 md:text-lg">
           Ingenieria educativa de alto nivel para construir experiencias escalables y medibles.
         </p>
 
@@ -23,11 +29,30 @@ function Team() {
           {members.map((member) => (
             <article
               key={member.name}
-              className={`rounded-2xl border bg-white/80 p-6 ${member.featured ? 'border-brand-purple shadow-glow lg:col-span-2' : 'border-slate-200'}`}
+              className={`glass-card group p-6 ${
+                member.featured
+                  ? 'border-brand-purple/35 shadow-glow lg:col-span-2'
+                  : 'border-slate-200 hover:border-brand-blue/35'
+              }`}
             >
-              <h3 className="text-xl font-bold text-brand-purple">{member.name}</h3>
-              <p className="mt-2 text-sm text-slate-700">{member.role}</p>
-              {member.description ? <p className="mt-3 text-sm text-slate-600">{member.description}</p> : null}
+              <div
+                className={`absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl ${
+                  member.featured ? 'bg-brand-purple/25' : 'bg-brand-blue/20'
+                }`}
+              />
+              <h3 className="relative text-xl font-black text-slate-900">{member.name}</h3>
+              <p className="relative mt-2 text-sm font-semibold text-slate-700">{member.role}</p>
+              {member.description ? (
+                <p className="relative mt-3 text-sm text-slate-600">{member.description}</p>
+              ) : null}
+
+              <div className="relative mt-5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/70">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 group-hover:w-full ${
+                    member.featured ? 'w-4/5 bg-brand-purple' : 'w-2/3 bg-brand-blue'
+                  }`}
+                />
+              </div>
             </article>
           ))}
         </div>

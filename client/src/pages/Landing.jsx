@@ -4,7 +4,7 @@ import Team from '../components/landing/Team.jsx'
 
 function Landing() {
   return (
-    <main>
+    <main className="app-shell">
       <Navbar />
       <Hero />
       <Team />

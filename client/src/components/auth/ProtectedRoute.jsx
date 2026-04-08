@@ -6,8 +6,13 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <p className="text-sm font-semibold text-slate-600">Verificando sesion...</p>
+      <main className="auth-shell">
+        <div className="auth-glow-blue" />
+        <div className="auth-glow-purple" />
+        <section className="glass-panel space-y-3 px-6 py-5">
+          <p className="glass-badge-blue">Autenticacion</p>
+          <p className="text-sm font-semibold text-slate-600">Verificando sesion...</p>
+        </section>
       </main>
     )
   }

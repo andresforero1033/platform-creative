@@ -12,15 +12,19 @@ function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/20 bg-white/80 backdrop-blur-md">
-      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <a href="#producto" className="text-lg font-extrabold tracking-tight text-brand-purple">
+    <header className="glass-nav sticky top-0 z-40">
+      <nav className="app-content flex items-center justify-between py-4">
+        <a
+          href="#producto"
+          className="group rounded-lg text-lg font-extrabold tracking-tight text-brand-purple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/30"
+        >
           Creative Platform
+          <span className="mt-1 block h-0.5 w-0 rounded-full bg-brand-purple transition-all duration-300 group-hover:w-full" />
         </a>
 
         <div className="hidden gap-6 text-sm font-medium text-slate-700 md:flex">
-          <a href="#producto" className="transition hover:text-brand-blue">Producto</a>
-          <a href="#equipo" className="transition hover:text-brand-blue">Equipo</a>
+          <a href="#producto" className="glass-link-blue">Producto</a>
+          <a href="#equipo" className="glass-link-blue">Equipo</a>
         </div>
 
         <div className="flex items-center gap-3">
@@ -28,14 +32,14 @@ function Navbar() {
             <>
               <Link
                 to="/profile"
-                className="rounded-xl border border-brand-blue/40 px-4 py-2 text-sm font-semibold text-brand-blue transition hover:bg-brand-blue/10"
+                className="glass-cta-secondary"
               >
                 Mi Perfil
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-xl bg-brand-purple px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:brightness-110"
+                className="glass-cta-primary"
               >
                 Cerrar Sesion
               </button>
@@ -44,13 +48,13 @@ function Navbar() {
             <>
               <Link
                 to="/login"
-                className="rounded-xl border border-brand-blue/40 px-4 py-2 text-sm font-semibold text-brand-blue transition hover:bg-brand-blue/10"
+                className="glass-cta-secondary"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="rounded-xl bg-brand-purple px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:brightness-110"
+                className="glass-cta-primary"
               >
                 Registro
               </Link>
