@@ -1,132 +1,196 @@
-# Platform Creative Backend
+# Platform Creative (Full-Stack)
 
-Backend API para la plataforma educativa Creative (MERN), con enfoque en seguridad, roles y calidad de ingeniería.
+Plataforma educativa MERN con backend en Express + MongoDB y frontend en React + Vite + Tailwind.
 
-## Arquitectura del Sistema
+## Estado Actual
 
-La API sigue un patron N-Tier con Service-Repository Pattern para separar responsabilidades y facilitar escalabilidad.
+- Backend estable con seguridad, auth por roles, gamificacion, notificaciones y realtime con Socket.io.
+- Frontend con rediseno global Glassmorphism (landing, auth, dashboard, profile).
+- Flujo full-stack de captura de leads activo en la landing (`POST /api/public/leads`).
 
-Flujo principal:
+## Stack
+
+### Backend
+
+- Node.js, Express, Mongoose
+- JWT (access + refresh)
+- Helmet, CORS, rate-limit, xss-clean, mongo-sanitize
+- Socket.io
+- Jest + Supertest + mongodb-memory-server
+
+### Frontend
+
+- React + Vite
+- Tailwind CSS
+- Framer Motion
+- Axios
+- React Router
+
+## Arquitectura
+
+Patron por capas:
 
 Request -> Route -> Controller -> Service -> Repository -> MongoDB
 
-- Route: define endpoint, middlewares de auth/validacion y delega al controlador.
-- Controller: capa HTTP delgada, transforma request/response y delega en servicios.
-- Service: reglas de negocio, casos de uso y orquestacion de seguridad.
-- Repository: acceso a datos con Mongoose y consultas optimizadas.
-- MongoDB: persistencia de entidades de dominio.
+- Route: declara endpoint + middlewares
+- Controller: capa HTTP delgada
+- Service: negocio
+- Repository: acceso a datos
+- Model: esquema de persistencia
 
-## Requisitos
+## Estructura de Carpetas (resumen)
 
-- Node.js 18+
-- npm 9+
+```text
+platform-creative/
+	app.js
+	server.js
+	routes/
+	controllers/
+	services/
+	repositories/
+	models/
+	tests/
+	docs/
+	client/
+		src/
+			pages/
+			components/
+			context/
+			api/
+```
 
-## Scripts principales
+## Variables de Entorno
 
-- `npm start`: inicia el servidor en modo normal.
-- `npm run dev`: inicia el servidor con watch.
-- `npm run seed`: siembra materias iniciales.
-- `npm test`: ejecuta tests con cobertura y umbral mínimo obligatorio.
-- `npm run test:watch`: ejecuta tests en modo watch.
-- `npm run test:coverage`: genera reporte de cobertura detallado.
+Backend (raiz, archivo `.env`):
+
+- `MONGODB_URI` (obligatoria)
+- `PORT` (opcional, default: `10000`)
+- `JWT_SECRET` o `JWT_ACCESS_SECRET` + `JWT_REFRESH_SECRET`
+- `CORS_ORIGINS` (opcional, separados por coma)
+
+Frontend (opcional, `client/.env`):
+
+- `VITE_API_BASE_URL` (default: `http://localhost:10000/api`)
+
+## Levantar Proyecto en Local
+
+### 1) Backend
+
+```bash
+npm install
+npm start
+```
+
+Backend disponible en:
+
+- API base: `http://localhost:10000/api`
+- Health: `http://localhost:10000/health`
+- Swagger UI: `http://localhost:10000/api-docs`
+
+### 2) Frontend
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Frontend disponible en:
+
+- `http://localhost:5173`
+
+## Scripts
+
+### Raiz (backend)
+
+- `npm start`: inicia backend
+- `npm run dev`: backend en watch
+- `npm run seed`: siembra datos iniciales
+- `npm test`: tests backend
+- `npm run test:watch`: tests en watch
+- `npm run test:coverage`: cobertura backend
+- `npm run socket:test`: prueba manual de socket client
+
+### Client (frontend)
+
+- `npm run dev`: entorno local Vite
+- `npm run lint`: lint frontend
+- `npm run build`: build produccion frontend
+- `npm run preview`: preview del build
+
+## Endpoints Clave
+
+### Auth
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+
+### Student
+
+- `GET /api/student/subjects`
+- `GET /api/student/recommendations/review`
+
+### Public (Landing)
+
+- `POST /api/public/leads`
+	- payload:
+		- `email` (string, requerido)
+		- `source` (string, opcional, default `landing`)
+		- `metadata` (object, opcional)
+
+## Captura de Leads (Landing)
+
+Implementacion full-stack activa:
+
+- Frontend: componente `LeadCapture` en landing (estado, validacion, loading, success/error).
+- Backend: flujo Route -> Controller -> Service -> Repository -> Model (`Lead`).
+
+Comportamiento:
+
+- Primer registro de email: crea lead (`201`).
+- Email repetido: responde exitoso con `alreadyRegistered: true`.
+
+## Realtime (Socket.io)
+
+Eventos principales:
+
+- `NEW_NOTIFICATION`
+- `NEW_FEEDBACK`
+
+Flujo:
+
+1. Cliente conecta con JWT.
+2. Middleware valida token.
+3. Socket queda vinculado a `userId`.
+4. Servicios emiten eventos dirigidos.
 
 ## Testing
-
-### Ejecutar tests
 
 ```bash
 npm test
 ```
 
-Este comando ejecuta suites unitarias e integraciones del backend.
+- Ejecuta suites unitarias e integracion del backend.
+- Integracion usa `mongodb-memory-server`.
 
-### Generar reporte de cobertura
+Cobertura:
 
 ```bash
 npm run test:coverage
 ```
 
-Se generan reportes en la carpeta `coverage/`:
+## CI
 
-- `coverage/lcov-report/index.html`: reporte HTML navegable.
-- Resumen en consola (`text-summary`).
+Workflow en `.github/workflows/node.js.yml` para `push` y `pull_request` sobre `main`.
 
-### Base de datos de prueba
+## Notas Operativas
 
-Los tests de integración usan `mongodb-memory-server`, por lo que no ensucian tu MongoDB Atlas.
+- Si el frontend cambia a otro puerto (por ejemplo 5174), incluye el origen en `CORS_ORIGINS` o usa la configuracion por defecto ya permitida.
+- Si `:10000` esta ocupado, libera el proceso antes de reiniciar backend.
+- La documentacion OpenAPI en `docs/openapi.yaml` es referencial y puede requerir sincronizacion de version/base path con endpoints actuales.
 
-### Verificación manual de tiempo real (Socket.io)
+## Licencia
 
-```bash
-npm run socket:test
-```
-
-Este script levanta un cliente Socket.io autenticado y valida recepción de eventos en tiempo real.
-
-### Resumen rápido de comandos de calidad
-
-- `npm test`: unit e integración.
-- `npm run test:coverage`: cobertura con umbral mínimo global.
-- `npm run socket:test`: chequeo manual realtime.
-
-## Pipeline CI
-
-El workflow de GitHub Actions está en `.github/workflows/node.js.yml` y ejecuta tests en cada `push` o `pull_request` a `main`.
-
-## Sistema de Gamificación
-
-### Rachas diarias (Daily Streaks)
-
-La lógica vive en `services/progressService.js` y se ejecuta al completar una lección por primera vez.
-
-- Si la última actividad fue el mismo día: la racha se mantiene.
-- Si la última actividad fue ayer: la racha aumenta en +1.
-- Si pasaron más de 48 horas: la racha se reinicia a 1.
-- Cuando la racha alcanza un múltiplo de 7, se aplica un bono adicional de 20 puntos.
-
-Campos relacionados en `models/User.js`:
-
-- `lastActivity` (Date)
-- `currentStreak` (Number)
-- `badges` (Array)
-
-### Medallas automáticas (Badges)
-
-Componentes de la capa:
-
-- Modelo: `models/Badge.js`
-- Repositorio: `repositories/badgeRepository.js`
-- Servicio: `services/badgeService.js`
-
-Trigger actual:
-
-- Cuando un estudiante completa todas las lecciones de una materia, recibe la medalla `Maestro de [Nombre Materia]`.
-- El logro se persiste en `User.badges`.
-- Se genera una notificación de logro para seguimiento de padre/madre.
-
-Esta implementación mantiene el patrón por capas Route -> Controller -> Service -> Repository.
-
-## Arquitectura de Tiempo Real
-
-### Flujo de conexión
-
-1. Cliente inicia handshake con Access Token JWT.
-2. Middleware de autenticación en sockets valida token.
-3. Si es válido, el socket se vincula al usuario conectado (Socket User Binding).
-4. Los servicios del backend emiten eventos dirigidos por userId.
-
-### Catálogo de eventos
-
-- `NEW_NOTIFICATION`: evento general de notificaciones al usuario destino.
-- `NEW_FEEDBACK`: evento específico para docentes cuando supervisor registra feedback.
-
-### Diagrama de bloques
-
-```mermaid
-flowchart LR
-	A[Services de Dominio<br/>notificationService / supervisorService] --> B[socketService.sendToUser]
-	B --> C[Socket Gateway<br/>config/socket.js]
-	C --> D[JWT Auth Middleware]
-	D --> E[User Socket Binding]
-	E --> F[Cliente Web / Móvil]
-```
+MIT.
