@@ -88,6 +88,11 @@ body::before {
 
   .glass-cta {
     @apply rounded-2xl px-5 py-3 text-sm font-bold transition duration-300;
+    transform: translateY(0) scale(1);
+  }
+
+  .glass-cta:hover {
+    transform: translateY(-1px) scale(1.01);
   }
 
   .glass-cta:focus-visible {
@@ -159,6 +164,23 @@ body::before {
     @apply rounded-xl border border-red-200/80 bg-red-50/85 px-3 py-2 text-sm font-medium text-red-700;
   }
 
+  .skeleton-shimmer {
+    @apply animate-pulse bg-slate-200/70;
+    background-image: linear-gradient(90deg, rgba(226, 232, 240, 0.6) 0%, rgba(255, 255, 255, 0.75) 40%, rgba(226, 232, 240, 0.6) 100%);
+    background-size: 220% 100%;
+    animation: skeleton-wave 1.35s ease-in-out infinite;
+  }
+
+
+@keyframes skeleton-wave {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
+}
   .auth-shell {
     @apply relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12;
   }

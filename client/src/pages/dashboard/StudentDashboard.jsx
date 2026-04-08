@@ -5,6 +5,8 @@ import api from '../../api/axios'
 import useAuth from '../../hooks/useAuth'
 import SubjectCard from '../../components/dashboard/SubjectCard'
 import StreakCounter from '../../components/dashboard/StreakCounter'
+import { DashboardPageSkeleton } from '../../components/feedback/LoadingSkeletons'
+import EmptyState from '../../components/feedback/EmptyState'
 import { getFirstPendingLesson, getMasteredLessonsCount } from '../../utils/lessonProgress'
 
 const MotionHeader = motion.header
@@ -44,6 +46,7 @@ function StudentDashboard() {
   const [masteryBySubject, setMasteryBySubject] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reloadTick, setReloadTick] = useState(0)
   const userId = user?.id || user?._id
 
   useEffect(() => {
@@ -56,7 +59,7 @@ function StudentDashboard() {
       try {
         const [subjectsResponse, progressResponse] = await Promise.all([
           api.get('/student/subjects'),
-          api.get('/student/recommendations/review').catch(() => ({ data: { data: [] } })),
+          api.get('/student/recommendations/review', { skipGlobalErrorToast: true }).catch(() => ({ data: { data: [] } })),
         ])
 
         const fetchedSubjects = Array.isArray(subjectsResponse?.data?.data)
@@ -86,7 +89,7 @@ function StudentDashboard() {
     return () => {
       isMounted = false
     }
-  }, [userId])
+  }, [userId, reloadTick])
 
   useEffect(() => {
     const handleQuizMastered = (event) => {
@@ -129,6 +132,21 @@ function StudentDashboard() {
     navigate(`/subjects/${subjectId}/lessons/${lessonId}`)
   }
 
+  if (loading) {
+    return (
+      <main className="app-shell overflow-hidden py-10">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -left-20 top-20 h-64 w-64 rounded-full bg-brand-blue/20 blur-3xl" />
+          <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-brand-purple/20 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-52 w-52 rounded-full bg-brand-yellow/20 blur-3xl" />
+        </div>
+        <section className="app-content">
+          <DashboardPageSkeleton metricCount={3} leftCards={3} rightCards={2} />
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className="app-shell overflow-hidden py-10">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -166,21 +184,29 @@ function StudentDashboard() {
             <span className="glass-badge-yellow">Seguimiento semanal</span>
           </div>
 
-          {loading ? (
-            <p className="glass-panel p-4 text-sm font-semibold text-slate-600">Cargando materias y progreso...</p>
-          ) : null}
-
           {error ? (
-            <p className="glass-error">{error}</p>
+            <div className="glass-panel space-y-3 border-red-200/70 bg-red-50/70 p-4">
+              <p className="text-sm font-semibold text-red-700">{error}</p>
+              <button
+                type="button"
+                className="glass-cta-primary"
+                onClick={() => setReloadTick((previous) => previous + 1)}
+              >
+                Reintentar carga
+              </button>
+            </div>
           ) : null}
 
-          {!loading && !error && !hasSubjects ? (
-            <p className="glass-panel p-4 text-sm text-slate-600">
-              Aun no tienes materias asignadas.
-            </p>
+          {!error && !hasSubjects ? (
+            <EmptyState
+              title="Sin materias asignadas"
+              description="Todavia no tienes materias activas. Cuando tu docente te habilite una ruta, aparecera aqui para comenzar."
+              ctaLabel="Ver perfil"
+              ctaTo="/profile"
+            />
           ) : null}
 
-          {!loading && !error && hasSubjects ? (
+          {!error && hasSubjects ? (
             <div className="grid gap-4 md:grid-cols-2">
               {subjects.map((subject, index) => {
                 const subjectId = subject._id || subject.id

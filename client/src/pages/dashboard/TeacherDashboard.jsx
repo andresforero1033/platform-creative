@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import useAuth from '../../hooks/useAuth'
 import DashboardMetricCard from '../../components/dashboard/DashboardMetricCard'
+import { DashboardPageSkeleton } from '../../components/feedback/LoadingSkeletons'
+import EmptyState from '../../components/feedback/EmptyState'
 
 const INITIAL_FORM = {
   subjectId: '',
@@ -15,9 +18,11 @@ function TeacherDashboard() {
   const [feedback, setFeedback] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reloadTick, setReloadTick] = useState(0)
   const [form, setForm] = useState(INITIAL_FORM)
   const [creatingLesson, setCreatingLesson] = useState(false)
   const [formFeedback, setFormFeedback] = useState({ type: '', message: '' })
+  const titleInputRef = useRef(null)
 
   const teacherId = user?.id || user?._id
 
@@ -61,7 +66,7 @@ function TeacherDashboard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [reloadTick])
 
   useEffect(() => {
     if (!form.subjectId && subjects.length > 0) {
@@ -121,12 +126,16 @@ function TeacherDashboard() {
     setFormFeedback({ type: '', message: '' })
 
     try {
-      await api.post(`/teacher/subjects/${form.subjectId}/lessons`, {
-        title: form.title.trim(),
-        content: form.content.trim(),
-      })
+      await api.post(
+        `/teacher/subjects/${form.subjectId}/lessons`,
+        {
+          title: form.title.trim(),
+          content: form.content.trim(),
+        },
+        { skipGlobalErrorToast: true },
+      )
 
-      const refreshedSubjectsResponse = await api.get('/student/subjects')
+      const refreshedSubjectsResponse = await api.get('/student/subjects', { skipGlobalErrorToast: true })
       const refreshedSubjects = Array.isArray(refreshedSubjectsResponse?.data?.data)
         ? refreshedSubjectsResponse.data.data
         : []
@@ -134,6 +143,7 @@ function TeacherDashboard() {
       setSubjects(refreshedSubjects)
       setForm((previous) => ({ ...previous, title: '', content: '' }))
       setFormFeedback({ type: 'success', message: 'Leccion creada correctamente.' })
+      toast.success('Leccion publicada con exito.')
     } catch (requestError) {
       const backendMessage = requestError?.response?.data?.message
       const validationMessage = requestError?.response?.data?.data?.[0]?.msg
@@ -145,6 +155,25 @@ function TeacherDashboard() {
     } finally {
       setCreatingLesson(false)
     }
+  }
+
+  const focusCreateLessonForm = () => {
+    titleInputRef.current?.focus()
+    titleInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  if (loading) {
+    return (
+      <main className="app-shell overflow-hidden py-10">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -left-20 top-20 h-64 w-64 rounded-full bg-brand-blue/20 blur-3xl" />
+          <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-brand-purple/20 blur-3xl" />
+        </div>
+        <section className="app-content">
+          <DashboardPageSkeleton metricCount={3} leftCards={3} rightCards={2} />
+        </section>
+      </main>
+    )
   }
 
   return (
@@ -187,10 +216,20 @@ function TeacherDashboard() {
           />
         </section>
 
-        {loading ? <p className="glass-panel p-4 text-sm font-semibold text-slate-600">Cargando panel docente...</p> : null}
-        {error ? <p className="glass-error">{error}</p> : null}
+        {error ? (
+          <div className="glass-panel space-y-3 border-red-200/70 bg-red-50/70 p-4">
+            <p className="text-sm font-semibold text-red-700">{error}</p>
+            <button
+              type="button"
+              className="glass-cta-primary"
+              onClick={() => setReloadTick((previous) => previous + 1)}
+            >
+              Reintentar carga
+            </button>
+          </div>
+        ) : null}
 
-        {!loading && !error ? (
+        {!error ? (
           <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <section className="glass-panel p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
@@ -199,7 +238,12 @@ function TeacherDashboard() {
               </div>
 
               {assignedSubjects.length === 0 ? (
-                <p className="text-sm text-slate-600">Aun no tienes materias asignadas como docente.</p>
+                <EmptyState
+                  title="Aun sin materias activas"
+                  description="Todavia no hay materias vinculadas a tu perfil docente. Mientras tanto, prepara tu primera leccion para publicarla rapido cuando se habilite una materia."
+                  ctaLabel="Ir a crear leccion"
+                  ctaOnClick={focusCreateLessonForm}
+                />
               ) : (
                 <div className="space-y-3">
                   {assignedSubjects.map((subject) => {
@@ -245,6 +289,8 @@ function TeacherDashboard() {
                   </select>
 
                   <input
+                    ref={titleInputRef}
+                    id="teacher-create-lesson-title"
                     type="text"
                     name="title"
                     value={form.title}
@@ -282,7 +328,10 @@ function TeacherDashboard() {
               <article className="glass-panel p-6">
                 <h2 className="text-xl font-extrabold text-slate-900">Feedback pendiente</h2>
                 {pendingFeedback.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">No tienes feedback pendiente por ahora.</p>
+                  <EmptyState
+                    title="Sin observaciones abiertas"
+                    description="Tu bandeja esta limpia. Cuando llegue nueva retroalimentacion de supervision aparecera aqui."
+                  />
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {pendingFeedback.slice(0, 4).map((item) => (

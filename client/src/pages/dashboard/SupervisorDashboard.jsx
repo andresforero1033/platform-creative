@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
 import DashboardMetricCard from '../../components/dashboard/DashboardMetricCard'
+import { DashboardPageSkeleton } from '../../components/feedback/LoadingSkeletons'
+import EmptyState from '../../components/feedback/EmptyState'
 
 function SupervisorDashboard() {
   const [teacherInsights, setTeacherInsights] = useState([])
   const [difficultLessons, setDifficultLessons] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reloadTick, setReloadTick] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -48,7 +51,7 @@ function SupervisorDashboard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [reloadTick])
 
   const topDifficultLessons = useMemo(
     () => [...difficultLessons].sort((a, b) => b.failRate - a.failRate).slice(0, 6),
@@ -75,6 +78,21 @@ function SupervisorDashboard() {
     if (!topDifficultLessons.length) return 100
     return Math.max(...topDifficultLessons.map((lesson) => lesson.failRate || 0), 1)
   }, [topDifficultLessons])
+
+  if (loading) {
+    return (
+      <main className="app-shell overflow-hidden py-10">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-brand-purple/20 blur-3xl" />
+          <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-brand-blue/20 blur-3xl" />
+        </div>
+
+        <section className="app-content">
+          <DashboardPageSkeleton metricCount={4} leftCards={4} rightCards={3} />
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="app-shell overflow-hidden py-10">
@@ -122,10 +140,20 @@ function SupervisorDashboard() {
           />
         </section>
 
-        {loading ? <p className="glass-panel p-4 text-sm font-semibold text-slate-600">Cargando panel supervisor...</p> : null}
-        {error ? <p className="glass-error">{error}</p> : null}
+        {error ? (
+          <div className="glass-panel space-y-3 border-red-200/70 bg-red-50/70 p-4">
+            <p className="text-sm font-semibold text-red-700">{error}</p>
+            <button
+              type="button"
+              className="glass-cta-primary"
+              onClick={() => setReloadTick((previous) => previous + 1)}
+            >
+              Reintentar carga
+            </button>
+          </div>
+        ) : null}
 
-        {!loading && !error ? (
+        {!error ? (
           <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <section className="glass-panel p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
@@ -134,7 +162,10 @@ function SupervisorDashboard() {
               </div>
 
               {topDifficultLessons.length === 0 ? (
-                <p className="text-sm text-slate-600">Aun no hay data de dificultad para mostrar.</p>
+                <EmptyState
+                  title="Sin lecciones en riesgo"
+                  description="Aun no hay volumen suficiente para detectar hotspots de fallo. Vuelve cuando haya mas intentos registrados."
+                />
               ) : (
                 <div className="space-y-3">
                   {topDifficultLessons.map((lesson) => {
@@ -170,7 +201,12 @@ function SupervisorDashboard() {
             <section className="glass-panel p-6">
               <h2 className="text-xl font-extrabold text-slate-900">Desempeno docente</h2>
               {teacherInsights.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-600">Aun no hay insight docente disponible.</p>
+                <div className="mt-3">
+                  <EmptyState
+                    title="Sin insight docente"
+                    description="Cuando haya trazas de progreso suficientes, este panel mostrara ranking y alertas por docente."
+                  />
+                </div>
               ) : (
                 <ul className="mt-3 space-y-2">
                   {teacherInsights

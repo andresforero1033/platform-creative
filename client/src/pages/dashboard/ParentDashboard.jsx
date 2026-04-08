@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 import DashboardMetricCard from '../../components/dashboard/DashboardMetricCard'
+import { DashboardPageSkeleton } from '../../components/feedback/LoadingSkeletons'
+import EmptyState from '../../components/feedback/EmptyState'
 
 function formatDate(value) {
   if (!value) return 'Sin fecha'
@@ -19,6 +21,7 @@ function ParentDashboard() {
   const [dashboard, setDashboard] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reloadTick, setReloadTick] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -50,7 +53,7 @@ function ParentDashboard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [reloadTick])
 
   const summary = dashboard?.summary || {}
   const children = Array.isArray(dashboard?.children) ? dashboard.children : []
@@ -59,6 +62,20 @@ function ParentDashboard() {
     : []
   const recentBadges = Array.isArray(dashboard?.recentBadges) ? dashboard.recentBadges : []
   const nextReview = dashboard?.nextReview || null
+
+  if (loading) {
+    return (
+      <main className="app-shell overflow-hidden py-10">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -left-16 top-16 h-72 w-72 rounded-full bg-brand-blue/20 blur-3xl" />
+          <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-brand-yellow/20 blur-3xl" />
+        </div>
+        <section className="app-content">
+          <DashboardPageSkeleton metricCount={4} leftCards={3} rightCards={2} />
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="app-shell overflow-hidden py-10">
@@ -106,10 +123,20 @@ function ParentDashboard() {
           />
         </section>
 
-        {loading ? <p className="glass-panel p-4 text-sm font-semibold text-slate-600">Cargando dashboard parental...</p> : null}
-        {error ? <p className="glass-error">{error}</p> : null}
+        {error ? (
+          <div className="glass-panel space-y-3 border-red-200/70 bg-red-50/70 p-4">
+            <p className="text-sm font-semibold text-red-700">{error}</p>
+            <button
+              type="button"
+              className="glass-cta-primary"
+              onClick={() => setReloadTick((previous) => previous + 1)}
+            >
+              Reintentar carga
+            </button>
+          </div>
+        ) : null}
 
-        {!loading && !error ? (
+        {!error ? (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="space-y-6">
               <article className="glass-panel p-6">
@@ -119,7 +146,12 @@ function ParentDashboard() {
                 </div>
 
                 {children.length === 0 ? (
-                  <p className="text-sm text-slate-600">Aun no hay hijos vinculados para mostrar.</p>
+                  <EmptyState
+                    title="Sin hijos vinculados"
+                    description="Conecta un estudiante para empezar a recibir su progreso, recordatorios de repaso e insignias en tiempo real."
+                    ctaLabel="Ir a mi perfil"
+                    ctaTo="/profile"
+                  />
                 ) : (
                   <div className="space-y-3">
                     {children.map((child) => (
@@ -153,7 +185,10 @@ function ParentDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-600">No hay repasos pendientes por ahora.</p>
+                  <EmptyState
+                    title="Todo al dia en repasos"
+                    description="No hay sesiones SRS pendientes por ahora. Vuelve luego para ver nuevas recomendaciones."
+                  />
                 )}
               </article>
             </section>
@@ -162,7 +197,12 @@ function ParentDashboard() {
               <article className="glass-panel p-6">
                 <h2 className="text-xl font-extrabold text-slate-900">Avance por materia</h2>
                 {progressBySubject.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">Sin datos de progreso por materia todavia.</p>
+                  <div className="mt-3">
+                    <EmptyState
+                      title="Sin progreso registrado"
+                      description="Cuando tus hijos completen lecciones, aqui veras la maestria promedio por materia."
+                    />
+                  </div>
                 ) : (
                   <div className="mt-4 space-y-3">
                     {progressBySubject.map((item) => (
@@ -189,7 +229,12 @@ function ParentDashboard() {
               <article className="glass-panel p-6">
                 <h2 className="text-xl font-extrabold text-slate-900">Insignias recientes</h2>
                 {recentBadges.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">Aun no hay insignias recientes.</p>
+                  <div className="mt-3">
+                    <EmptyState
+                      title="Sin insignias recientes"
+                      description="Las nuevas insignias de tus hijos apareceran aqui para celebrar sus logros."
+                    />
+                  </div>
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {recentBadges.map((badge, index) => (
