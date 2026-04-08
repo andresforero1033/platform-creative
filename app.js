@@ -11,6 +11,7 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 
 const authRoutes = require("./routes/auth");
+const publicRoutes = require("./routes/public");
 const supervisorRoutes = require("./routes/supervisor");
 const studentRoutes = require("./routes/student");
 const teacherRoutes = require("./routes/teacher");
@@ -80,6 +81,7 @@ function createApp() {
 
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
   app.use("/api/auth", authRoutes);
+  app.use("/api/public", publicRoutes);
   app.use("/api/supervisor", supervisorRoutes);
   app.use("/api/student", studentRoutes);
   app.use("/api/teacher", teacherRoutes);

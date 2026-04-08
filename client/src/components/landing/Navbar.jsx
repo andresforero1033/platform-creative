@@ -24,6 +24,7 @@ function Navbar() {
 
         <div className="hidden gap-6 text-sm font-medium text-slate-700 md:flex">
           <a href="#producto" className="glass-link-blue">Producto</a>
+          <a href="#beta" className="glass-link-blue">Beta</a>
           <a href="#equipo" className="glass-link-blue">Equipo</a>
         </div>
 
