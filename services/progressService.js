@@ -7,12 +7,29 @@ const notificationRepository = require("../repositories/notificationRepository")
 const quizRepository = require("../repositories/quizRepository");
 const questionRepository = require("../repositories/questionRepository");
 const badgeService = require("./badgeService");
+const classroomService = require("./classroomService");
 const { logger } = require("../config/logger");
 
 const STREAK_BONUS_INTERVAL = 7;
 const STREAK_BONUS_POINTS = 20;
 const REVIEW_FAIL_DAYS = 2;
 const REVIEW_PASS_DAYS = 7;
+
+function extractUserId(authUser) {
+  if (!authUser) {
+    return null;
+  }
+
+  if (typeof authUser === "string") {
+    return authUser;
+  }
+
+  return authUser.id || authUser._id || null;
+}
+
+function isStudentUserContext(authUser) {
+  return !!authUser && typeof authUser === "object" && authUser.role === "student";
+}
 
 function isSameDay(dateA, dateB) {
   return (
@@ -109,8 +126,13 @@ function sanitizeQuizQuestions(questions, questionIds) {
     }));
 }
 
-async function getLessonQuiz(userId, payload) {
+async function getLessonQuiz(authUser, payload) {
+  const userId = extractUserId(authUser);
   const { subjectId, lessonId } = payload;
+
+  if (!userId) {
+    throw new AppError("Usuario no valido.", 401);
+  }
 
   if (!subjectId || !lessonId) {
     throw new AppError("subjectId y lessonId son obligatorios.", 400);
@@ -118,6 +140,10 @@ async function getLessonQuiz(userId, payload) {
 
   if (!mongoose.Types.ObjectId.isValid(subjectId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
     throw new AppError("subjectId o lessonId tiene formato invalido.", 400);
+  }
+
+  if (isStudentUserContext(authUser)) {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
   }
 
   const subject = await subjectRepository.findByIdWithLessonsLean(subjectId);
@@ -161,8 +187,13 @@ async function getLessonQuiz(userId, payload) {
   };
 }
 
-async function completeLesson(userId, payload) {
+async function completeLesson(authUser, payload) {
+  const userId = extractUserId(authUser);
   const { subjectId, lessonId } = payload;
+
+  if (!userId) {
+    throw new AppError("Usuario no valido.", 401);
+  }
 
   if (!subjectId || !lessonId) {
     throw new AppError("subjectId y lessonId son obligatorios.", 400);
@@ -170,6 +201,10 @@ async function completeLesson(userId, payload) {
 
   if (!mongoose.Types.ObjectId.isValid(subjectId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
     throw new AppError("subjectId o lessonId tiene formato invalido.", 400);
+  }
+
+  if (isStudentUserContext(authUser)) {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
   }
 
   const subject = await subjectRepository.findByIdWithLessonsLean(subjectId);
@@ -262,8 +297,13 @@ function normalizeAnswers(answers) {
   return answerMap;
 }
 
-async function submitQuiz(userId, payload) {
+async function submitQuiz(authUser, payload) {
+  const userId = extractUserId(authUser);
   const { subjectId, lessonId, answers } = payload;
+
+  if (!userId) {
+    throw new AppError("Usuario no valido.", 401);
+  }
 
   if (!subjectId || !lessonId || !Array.isArray(answers)) {
     throw new AppError("subjectId, lessonId y answers son obligatorios.", 400);
@@ -271,6 +311,10 @@ async function submitQuiz(userId, payload) {
 
   if (!mongoose.Types.ObjectId.isValid(subjectId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
     throw new AppError("subjectId o lessonId tiene formato invalido.", 400);
+  }
+
+  if (isStudentUserContext(authUser)) {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
   }
 
   const subject = await subjectRepository.findByIdWithLessonsLean(subjectId);
@@ -385,7 +429,12 @@ async function submitQuiz(userId, payload) {
   };
 }
 
-async function getReviewRecommendations(userId) {
+async function getReviewRecommendations(authUser) {
+  const userId = extractUserId(authUser);
+  if (!userId) {
+    throw new AppError("Usuario no valido.", 401);
+  }
+
   const dueProgressItems = await progressRepository.findDueReviewsByUserLean(userId, new Date());
   if (!dueProgressItems.length) {
     return {

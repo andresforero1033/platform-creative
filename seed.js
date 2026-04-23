@@ -3,6 +3,7 @@ require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const connectDB = require("./config/db");
 const Subject = require("./models/Subject");
+const Institution = require("./models/Institution");
 
 if (!/\/creativeDB(\?|$)/.test(process.env.MONGODB_URI || "")) {
   console.error("MONGODB_URI debe incluir /creativeDB al final de la ruta de base de datos.");
@@ -76,6 +77,30 @@ async function seedSubjects() {
   try {
     await connectDB();
     console.log("Modo seed activo sobre creativeDB.");
+
+    const defaultInstitution = await Institution.findOneAndUpdate(
+      { adminUsername: "forero.admin" },
+      {
+        $set: {
+          name: "IED Forero",
+          legalId: "NIT-900000001",
+          licenseStatus: "active",
+          isActive: true,
+        },
+        $setOnInsert: {
+          adminUsername: "forero.admin",
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+      }
+    );
+
+    console.log(
+      `Institucion lista: ${defaultInstitution.name} (adminUsername: ${defaultInstitution.adminUsername})`
+    );
 
     const results = await Promise.all(
       subjectsToSeed.map(async (materia) => {

@@ -1,4 +1,6 @@
 const express = require("express");
+const { body } = require("express-validator");
+const validateRequest = require("../middleware/validateRequest");
 const {
 	getSubjects,
 	getSubjectById,
@@ -12,6 +14,7 @@ const {
 	getReviewRecommendations,
 } = require("../controllers/progressController");
 const { getFinalChallenge, submitFinalChallenge } = require("../controllers/challengeController");
+const { enrollStudentByClassCode } = require("../controllers/classroomController");
 const { protect, authorize } = require("../middleware/auth");
 
 const router = express.Router();
@@ -26,5 +29,18 @@ router.get("/subjects/:subjectId/lessons/:lessonId/quiz", protect, authorize("st
 router.post("/complete-lesson", protect, authorize("student", "supervisor"), completeLesson);
 router.post("/subjects/:subjectId/lessons/:lessonId/quiz/submit", protect, authorize("student", "supervisor"), submitQuiz);
 router.post("/subjects/:id/final-challenge/submit", protect, authorize("student", "supervisor"), submitFinalChallenge);
+router.post(
+	"/classes/enroll",
+	protect,
+	authorize("student", "supervisor"),
+	[
+		body("classCode")
+			.trim()
+			.matches(/^[A-Za-z0-9]{6,14}$/)
+			.withMessage("classCode invalido."),
+	],
+	validateRequest,
+	enrollStudentByClassCode
+);
 
 module.exports = router;

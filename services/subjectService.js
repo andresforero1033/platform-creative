@@ -1,12 +1,29 @@
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const subjectRepository = require("../repositories/subjectRepository");
+const classroomService = require("./classroomService");
 
-async function getSubjects(searchQuery) {
+async function getSubjects(searchQuery, authUser = null) {
   const search = (searchQuery || "").trim();
-  const filter = search
-    ? { name: { $regex: search, $options: "i" } }
-    : {};
+  const filter = {};
+
+  if (search) {
+    filter.name = { $regex: search, $options: "i" };
+  }
+
+  if (authUser?.role === "student") {
+    const enrolledSubjectIds = await classroomService.getEnrolledSubjectIds(authUser);
+
+    if (!enrolledSubjectIds.length) {
+      return {
+        statusCode: 200,
+        message: "Materias obtenidas correctamente.",
+        data: [],
+      };
+    }
+
+    filter._id = { $in: enrolledSubjectIds };
+  }
 
   const subjects = await subjectRepository.findSubjects(filter);
 
@@ -19,9 +36,13 @@ async function getSubjects(searchQuery) {
   };
 }
 
-async function getSubjectById(subjectId) {
+async function getSubjectById(subjectId, authUser = null) {
   if (!mongoose.Types.ObjectId.isValid(subjectId)) {
     throw new AppError("Materia no encontrada: id invalido.", 404);
+  }
+
+  if (authUser?.role === "student") {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
   }
 
   const subject = await subjectRepository.findByIdLean(subjectId);
@@ -47,9 +68,13 @@ function detectLessonContentType(content) {
   };
 }
 
-async function getSubjectLesson(subjectId, lessonId) {
+async function getSubjectLesson(subjectId, lessonId, authUser = null) {
   if (!mongoose.Types.ObjectId.isValid(subjectId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
     throw new AppError("Materia o leccion no encontrada: id invalido.", 404);
+  }
+
+  if (authUser?.role === "student") {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
   }
 
   const subject = await subjectRepository.findByIdLean(subjectId);

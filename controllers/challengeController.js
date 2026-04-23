@@ -2,7 +2,7 @@ const challengeService = require("../services/challengeService");
 
 async function getFinalChallenge(req, res, next) {
   try {
-    const result = await challengeService.getFinalChallenge(req.user.id, req.params.id);
+    const result = await challengeService.getFinalChallenge(req.user, req.params.id);
 
     return res.status(result.statusCode).json({
       success: true,
@@ -17,7 +17,7 @@ async function getFinalChallenge(req, res, next) {
 async function submitFinalChallenge(req, res, next) {
   try {
     const result = await challengeService.submitFinalChallenge(
-      req.user.id,
+      req.user,
       req.params.id,
       req.body.answers
     );

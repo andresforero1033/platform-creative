@@ -4,6 +4,7 @@ const subjectRepository = require("../repositories/subjectRepository");
 const questionRepository = require("../repositories/questionRepository");
 const progressRepository = require("../repositories/progressRepository");
 const badgeService = require("./badgeService");
+const classroomService = require("./classroomService");
 const { logger } = require("../config/logger");
 
 const FINAL_CHALLENGE_SIZE = 10;
@@ -48,6 +49,10 @@ function sanitizeQuestions(questions) {
 }
 
 async function getFinalChallenge(userId, subjectId) {
+  if (!userId) {
+    throw new AppError("Usuario no valido.", 401);
+  }
+
   ensureObjectId(subjectId, "subjectId");
 
   const subject = await validateSubjectMasteryReadiness(userId, subjectId);
@@ -70,6 +75,10 @@ async function getFinalChallenge(userId, subjectId) {
 }
 
 async function submitFinalChallenge(userId, subjectId, answers) {
+  if (!userId) {
+    throw new AppError("Usuario no valido.", 401);
+  }
+
   ensureObjectId(subjectId, "subjectId");
 
   if (!Array.isArray(answers) || answers.length !== FINAL_CHALLENGE_SIZE) {
@@ -132,7 +141,43 @@ async function submitFinalChallenge(userId, subjectId, answers) {
   };
 }
 
+function extractUserId(authUser) {
+  if (!authUser) {
+    return null;
+  }
+
+  if (typeof authUser === "string") {
+    return authUser;
+  }
+
+  return authUser.id || authUser._id || null;
+}
+
+function isStudentUserContext(authUser) {
+  return !!authUser && typeof authUser === "object" && authUser.role === "student";
+}
+
+async function getFinalChallengeWithContext(authUser, subjectId) {
+  const userId = extractUserId(authUser);
+
+  if (isStudentUserContext(authUser)) {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
+  }
+
+  return getFinalChallenge(userId, subjectId);
+}
+
+async function submitFinalChallengeWithContext(authUser, subjectId, answers) {
+  const userId = extractUserId(authUser);
+
+  if (isStudentUserContext(authUser)) {
+    await classroomService.ensureStudentEnrollmentForSubject(authUser, subjectId);
+  }
+
+  return submitFinalChallenge(userId, subjectId, answers);
+}
+
 module.exports = {
-  getFinalChallenge,
-  submitFinalChallenge,
+  getFinalChallenge: getFinalChallengeWithContext,
+  submitFinalChallenge: submitFinalChallengeWithContext,
 };

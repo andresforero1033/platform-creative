@@ -3,7 +3,7 @@ const certificateService = require("../services/certificateService");
 
 async function getSubjects(req, res, next) {
   try {
-    const result = await subjectService.getSubjects(req.query.search);
+    const result = await subjectService.getSubjects(req.query.search, req.user);
 
     return res.status(200).json({
       success: true,
@@ -17,7 +17,7 @@ async function getSubjects(req, res, next) {
 
 async function getSubjectById(req, res, next) {
   try {
-    const result = await subjectService.getSubjectById(req.params.id);
+    const result = await subjectService.getSubjectById(req.params.id, req.user);
 
     return res.status(200).json({
       success: true,
@@ -33,7 +33,8 @@ async function getSubjectLesson(req, res, next) {
   try {
     const result = await subjectService.getSubjectLesson(
       req.params.subjectId,
-      req.params.lessonId
+      req.params.lessonId,
+      req.user
     );
 
     return res.status(200).json({

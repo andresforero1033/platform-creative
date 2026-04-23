@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
 import DashboardMetricCard from '../../components/dashboard/DashboardMetricCard'
+import useAuth from '../../hooks/useAuth'
 
 const ROLE_ORDER = ['student', 'teacher', 'parent', 'supervisor', 'admin']
 
@@ -20,6 +21,19 @@ const ROLE_TONES = {
   admin: 'blue',
 }
 
+const MANAGED_ROLE_FILTERS = [
+  { value: 'all', label: 'Todos' },
+  { value: 'student', label: 'Estudiantes' },
+  { value: 'teacher', label: 'Docentes' },
+  { value: 'parent', label: 'Padres' },
+]
+
+const MANAGED_ROLE_LABELS = {
+  student: 'Estudiante',
+  teacher: 'Docente',
+  parent: 'Padre/Madre',
+}
+
 function formatDateTime(value) {
   if (!value) return 'Sin ejecucion previa'
 
@@ -36,9 +50,17 @@ function formatDateTime(value) {
 }
 
 function AdminDashboard() {
+  const { user } = useAuth()
   const [metrics, setMetrics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const [roleFilter, setRoleFilter] = useState('all')
+  const [institutionUsersSummary, setInstitutionUsersSummary] = useState(null)
+  const [institutionUsers, setInstitutionUsers] = useState([])
+  const [loadingInstitutionUsers, setLoadingInstitutionUsers] = useState(true)
+  const [institutionUsersError, setInstitutionUsersError] = useState('')
+  const [activationInProgressUserId, setActivationInProgressUserId] = useState('')
 
   const [triggering, setTriggering] = useState(false)
   const [triggerResult, setTriggerResult] = useState(null)
@@ -91,6 +113,36 @@ function AdminDashboard() {
     }))
   }, [metrics])
 
+  const pendingInstitutionUsers = useMemo(
+    () => institutionUsers.filter((account) => account.isInstitutionValidated === false).length,
+    [institutionUsers],
+  )
+
+  const loadInstitutionUsers = async (targetRoleFilter = roleFilter) => {
+    setLoadingInstitutionUsers(true)
+    setInstitutionUsersError('')
+
+    try {
+      const response = await api.get('/admin/institution-users', {
+        params: targetRoleFilter !== 'all' ? { role: targetRoleFilter } : undefined,
+      })
+
+      const payload = response?.data?.data || null
+      setInstitutionUsersSummary(payload)
+      setInstitutionUsers(Array.isArray(payload?.users) ? payload.users : [])
+    } catch {
+      setInstitutionUsersError('No se pudo cargar la gestion de usuarios institucionales.')
+      setInstitutionUsersSummary(null)
+      setInstitutionUsers([])
+    } finally {
+      setLoadingInstitutionUsers(false)
+    }
+  }
+
+  useEffect(() => {
+    loadInstitutionUsers(roleFilter)
+  }, [roleFilter])
+
   const handleTriggerReminders = async () => {
     setTriggering(true)
     setTriggerError('')
@@ -137,6 +189,27 @@ function AdminDashboard() {
       setGlobalError('No se pudo enviar el mensaje global en este momento.')
     } finally {
       setSendingGlobalMessage(false)
+    }
+  }
+
+  const handleActivateUser = async (targetUserId) => {
+    setActivationInProgressUserId(targetUserId)
+    setInstitutionUsersError('')
+
+    try {
+      await api.patch(`/admin/institution-users/${targetUserId}/activation`, {
+        isInstitutionValidated: true,
+      })
+
+      setInstitutionUsers((previous) => previous.map((account) => (
+        account.id === targetUserId
+          ? { ...account, isInstitutionValidated: true }
+          : account
+      )))
+    } catch {
+      setInstitutionUsersError('No se pudo activar el usuario seleccionado.')
+    } finally {
+      setActivationInProgressUserId('')
     }
   }
 
@@ -190,8 +263,112 @@ function AdminDashboard() {
         {error ? <p className="glass-error">{error}</p> : null}
 
         {!loading && !error ? (
-          <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <div className="space-y-6">
             <section className="glass-panel p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Admin Hub de roles</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Usuario institucional: <span className="font-bold text-slate-900">{institutionUsersSummary?.institutionAdminReference || user?.institutionAdminReference || '-'}</span>
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {MANAGED_ROLE_FILTERS.map((filter) => (
+                    <button
+                      key={filter.value}
+                      type="button"
+                      onClick={() => setRoleFilter(filter.value)}
+                      className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${
+                        roleFilter === filter.value
+                          ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/25'
+                          : 'bg-white/70 text-slate-700 hover:bg-white'
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <DashboardMetricCard
+                  label="Usuarios listados"
+                  value={institutionUsers.length}
+                  description={`Filtro actual: ${roleFilter}`}
+                  tone="blue"
+                />
+                <DashboardMetricCard
+                  label="Pendientes"
+                  value={pendingInstitutionUsers}
+                  description="Requieren activacion"
+                  tone="yellow"
+                />
+                <DashboardMetricCard
+                  label="Activos"
+                  value={institutionUsers.length - pendingInstitutionUsers}
+                  description="Acceso institucional habilitado"
+                  tone="purple"
+                />
+              </div>
+
+              {loadingInstitutionUsers ? (
+                <p className="mt-4 text-sm font-semibold text-slate-600">Cargando usuarios institucionales...</p>
+              ) : null}
+
+              {institutionUsersError ? <p className="glass-error mt-4">{institutionUsersError}</p> : null}
+
+              {!loadingInstitutionUsers && !institutionUsersError ? (
+                institutionUsers.length === 0 ? (
+                  <p className="mt-4 rounded-2xl border border-white/70 bg-white/65 p-4 text-sm text-slate-600">
+                    No hay usuarios para este filtro.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {institutionUsers.map((account) => (
+                      <article key={account.id} className="glass-card border-brand-blue/20 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-black text-slate-900">{account.name}</p>
+                            <p className="text-xs text-slate-600">{account.email}</p>
+                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                              {MANAGED_ROLE_LABELS[account.role] || account.role}
+                            </p>
+                            <p className="text-xs text-slate-500">DNI: {account.dni || 'Sin DNI'}</p>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
+                                account.isInstitutionValidated === false
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-emerald-100 text-emerald-700'
+                              }`}
+                            >
+                              {account.isInstitutionValidated === false ? 'Pendiente' : 'Activo'}
+                            </span>
+
+                            {account.isInstitutionValidated === false ? (
+                              <button
+                                type="button"
+                                onClick={() => handleActivateUser(account.id)}
+                                disabled={activationInProgressUserId === account.id}
+                                className="glass-cta-primary disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {activationInProgressUserId === account.id ? 'Activando...' : 'Activar'}
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )
+              ) : null}
+            </section>
+
+            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+              <section className="glass-panel p-6">
               <h2 className="text-xl font-extrabold text-slate-900">Distribucion por rol</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {roleRows.map((item) => (
@@ -204,9 +381,9 @@ function AdminDashboard() {
                   />
                 ))}
               </div>
-            </section>
+              </section>
 
-            <section className="glass-panel p-6">
+              <section className="glass-panel p-6">
               <h2 className="text-xl font-extrabold text-slate-900">Motor de recordatorios</h2>
               <p className="mt-2 text-sm text-slate-600">
                 Ejecuta notificaciones para repasos pendientes de forma manual.
@@ -281,7 +458,8 @@ function AdminDashboard() {
                   </article>
                 ) : null}
               </div>
-            </section>
+              </section>
+            </div>
           </div>
         ) : null}
       </section>

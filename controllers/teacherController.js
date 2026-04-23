@@ -2,7 +2,7 @@ const teacherService = require("../services/teacherService");
 
 async function addLessonToSubject(req, res, next) {
   try {
-    const result = await teacherService.addLessonToSubject(req.params.id, req.body, req.user.id);
+    const result = await teacherService.addLessonToSubject(req.params.id, req.body, req.user);
 
     return res.status(result.statusCode).json({
       success: true,

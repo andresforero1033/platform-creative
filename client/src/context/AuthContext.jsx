@@ -149,8 +149,8 @@ export function AuthProvider({ children }) {
     }
   }, [persistSession])
 
-  const register = useCallback(async ({ name, email, password, role }) => {
-    const response = await api.post('/auth/register', { name, email, password, role })
+  const register = useCallback(async (payload) => {
+    const response = await api.post('/auth/register', payload)
     const data = response?.data?.data || {}
 
     persistSession({

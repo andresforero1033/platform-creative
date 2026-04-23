@@ -5,6 +5,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const User = require("../../models/User");
 const Subject = require("../../models/Subject");
+const Classroom = require("../../models/Classroom");
 const Question = require("../../models/Question");
 const Quiz = require("../../models/Quiz");
 const Progress = require("../../models/Progress");
@@ -74,6 +75,15 @@ describe("Quiz submission integration", () => {
           content: "Contenido de fracciones con ejemplos claros.",
         },
       ],
+    });
+
+    await Classroom.create({
+      institutionId: user.institutionId,
+      subjectId: subject._id,
+      teacherId: user._id,
+      courseName: "1201",
+      classCode: "CLQSUB001",
+      studentIds: [user._id],
     });
 
     const q1 = await Question.create({
@@ -159,6 +169,15 @@ describe("Quiz submission integration", () => {
           content: "Analisis de texto corto y preguntas guiadas.",
         },
       ],
+    });
+
+    await Classroom.create({
+      institutionId: user.institutionId,
+      subjectId: subject._id,
+      teacherId: user._id,
+      courseName: "1202",
+      classCode: "CLQSUB002",
+      studentIds: [user._id],
     });
 
     const q1 = await Question.create({

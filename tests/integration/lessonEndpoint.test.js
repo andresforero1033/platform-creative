@@ -5,6 +5,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const User = require("../../models/User");
 const Subject = require("../../models/Subject");
+const Classroom = require("../../models/Classroom");
 
 let mongoServer;
 let app;
@@ -78,6 +79,15 @@ describe("Lesson endpoint integration", () => {
           content: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         },
       ],
+    });
+
+    await Classroom.create({
+      institutionId: student.institutionId,
+      subjectId: subject._id,
+      teacherId: student._id,
+      courseName: "1001",
+      classCode: "CLLESSON01",
+      studentIds: [student._id],
     });
 
     const token = signAccessToken(student._id, "student");

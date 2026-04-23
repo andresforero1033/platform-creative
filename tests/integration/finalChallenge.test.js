@@ -5,6 +5,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const User = require("../../models/User");
 const Subject = require("../../models/Subject");
+const Classroom = require("../../models/Classroom");
 const Question = require("../../models/Question");
 const Progress = require("../../models/Progress");
 
@@ -80,6 +81,15 @@ describe("Final Challenge integration", () => {
           content: "Leccion completa sobre plantas y energia.",
         },
       ],
+    });
+
+    await Classroom.create({
+      institutionId: student.institutionId,
+      subjectId: subject._id,
+      teacherId: student._id,
+      courseName: "1401",
+      classCode: "CLFINAL01",
+      studentIds: [student._id],
     });
 
     await Progress.create([

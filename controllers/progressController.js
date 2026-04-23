@@ -2,7 +2,7 @@ const progressService = require("../services/progressService");
 
 async function completeLesson(req, res, next) {
   try {
-    const result = await progressService.completeLesson(req.user.id, req.body);
+    const result = await progressService.completeLesson(req.user, req.body);
 
     return res.status(result.statusCode).json({
       success: true,
@@ -16,7 +16,7 @@ async function completeLesson(req, res, next) {
 
 async function submitQuiz(req, res, next) {
   try {
-    const result = await progressService.submitQuiz(req.user.id, {
+    const result = await progressService.submitQuiz(req.user, {
       subjectId: req.params.subjectId,
       lessonId: req.params.lessonId,
       answers: req.body.answers,
@@ -34,7 +34,7 @@ async function submitQuiz(req, res, next) {
 
 async function getLessonQuiz(req, res, next) {
   try {
-    const result = await progressService.getLessonQuiz(req.user.id, {
+    const result = await progressService.getLessonQuiz(req.user, {
       subjectId: req.params.subjectId,
       lessonId: req.params.lessonId,
     });
@@ -51,7 +51,7 @@ async function getLessonQuiz(req, res, next) {
 
 async function getReviewRecommendations(req, res, next) {
   try {
-    const result = await progressService.getReviewRecommendations(req.user.id);
+    const result = await progressService.getReviewRecommendations(req.user);
 
     return res.status(result.statusCode).json({
       success: true,

@@ -5,7 +5,9 @@ const feedbackRepository = require("../repositories/feedbackRepository");
 const userRepository = require("../repositories/userRepository");
 const notificationService = require("./notificationService");
 
-async function addLessonToSubject(subjectId, payload, teacherId) {
+async function addLessonToSubject(subjectId, payload, teacherUser) {
+  const teacherId = teacherUser?.id || teacherUser;
+  const institutionId = teacherUser?.institutionId || null;
   const { title, content } = payload;
 
   if (!mongoose.Types.ObjectId.isValid(subjectId)) {
@@ -26,7 +28,7 @@ async function addLessonToSubject(subjectId, payload, teacherId) {
   const createdLesson = lessons.length > 0 ? lessons[lessons.length - 1] : null;
 
   if (createdLesson) {
-    const students = await userRepository.findByRoleLean("student");
+    const students = await userRepository.findByRoleLean("student", institutionId);
 
     await Promise.all(
       students.map((student) => notificationService.createNotification({

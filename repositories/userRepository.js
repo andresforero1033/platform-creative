@@ -1,5 +1,13 @@
 const User = require("../models/User");
 
+function normalizeDni(dni) {
+  return (dni || "").trim().toUpperCase();
+}
+
+function normalizeInstitutionAdminReference(institutionAdminReference) {
+  return (institutionAdminReference || "").trim().toLowerCase();
+}
+
 async function findByEmailLean(email) {
   return User.findOne({ email }).lean();
 }
@@ -16,12 +24,48 @@ async function findByIdLean(userId) {
   return User.findById(userId).lean();
 }
 
-async function findByRoleLean(role) {
-  return User.find({ role }).select("_id name email role").lean();
+async function findByRoleLean(role, institutionId = null) {
+  const filter = { role };
+
+  if (institutionId) {
+    filter.institutionId = institutionId;
+  }
+
+  return User.find(filter)
+    .select("_id name email role institutionId institutionAdminReference isInstitutionValidated dni")
+    .lean();
 }
 
-async function findAllLean() {
-  return User.find({}).select("_id name email role").lean();
+async function findAllLean(institutionId = null) {
+  const filter = {};
+
+  if (institutionId) {
+    filter.institutionId = institutionId;
+  }
+
+  return User.find(filter)
+    .select("_id name email role institutionId institutionAdminReference isInstitutionValidated dni")
+    .lean();
+}
+
+async function findByInstitutionReferenceLean(institutionAdminReference, role = null) {
+  const normalizedReference = normalizeInstitutionAdminReference(institutionAdminReference);
+  if (!normalizedReference) {
+    return [];
+  }
+
+  const filter = {
+    institutionAdminReference: normalizedReference,
+  };
+
+  if (role) {
+    filter.role = role;
+  }
+
+  return User.find(filter)
+    .select("_id name email role institutionId institutionAdminReference isInstitutionValidated dni createdAt")
+    .sort({ createdAt: -1 })
+    .lean();
 }
 
 async function findParentsByChildIdLean(childId) {
@@ -44,6 +88,39 @@ async function findManyByIdsLean(userIds, role) {
   }
 
   return User.find(filter).lean();
+}
+
+async function findByDniAndInstitutionLean(dni, institutionId, role = null) {
+  const normalizedDni = normalizeDni(dni);
+  if (!normalizedDni || !institutionId) {
+    return null;
+  }
+
+  const filter = {
+    dni: normalizedDni,
+    institutionId,
+  };
+
+  if (role) {
+    filter.role = role;
+  }
+
+  return User.findOne(filter).lean();
+}
+
+async function addChildToParent(parentId, childId) {
+  return User.findByIdAndUpdate(
+    parentId,
+    {
+      $addToSet: {
+        childrenIds: childId,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).lean();
 }
 
 async function aggregateUsersByRole() {
@@ -116,6 +193,21 @@ async function updateProfileMetadata(userId, profile) {
   ).lean();
 }
 
+async function updateInstitutionValidationStatus(userId, isInstitutionValidated) {
+  return User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        isInstitutionValidated: !!isInstitutionValidated,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).lean();
+}
+
 module.exports = {
   findByEmailLean,
   createUser,
@@ -123,11 +215,15 @@ module.exports = {
   findByIdLean,
   findByRoleLean,
   findAllLean,
+  findByInstitutionReferenceLean,
   findParentsByChildIdLean,
   findManyByIdsLean,
+  findByDniAndInstitutionLean,
+  addChildToParent,
   aggregateUsersByRole,
   incrementUserPoints,
   updateActivityAndStreak,
   addBadgeToUser,
   updateProfileMetadata,
+  updateInstitutionValidationStatus,
 };

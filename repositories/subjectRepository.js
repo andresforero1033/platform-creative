@@ -16,6 +16,16 @@ async function findByIdWithLessonsLean(subjectId) {
   return Subject.findById(subjectId).select("_id lessons").lean();
 }
 
+async function findManyByIdsLean(subjectIds) {
+  if (!Array.isArray(subjectIds) || !subjectIds.length) {
+    return [];
+  }
+
+  return Subject.find({
+    _id: { $in: subjectIds },
+  }).lean();
+}
+
 async function findByLessonIdLean(lessonId) {
   return Subject.findOne({ "lessons._id": lessonId }).lean();
 }
@@ -57,6 +67,7 @@ module.exports = {
   findByIdLean,
   findByIdWithLessons,
   findByIdWithLessonsLean,
+  findManyByIdsLean,
   findByLessonIdLean,
   addLesson,
   saveSubject,

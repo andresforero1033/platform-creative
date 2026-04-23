@@ -36,6 +36,10 @@ async function protect(req, res, next) {
       name: user.name,
       email: user.email,
       role: user.role,
+      institutionId: user.institutionId ? user.institutionId.toString() : null,
+      institutionAdminReference: user.institutionAdminReference || null,
+      isInstitutionValidated: user.isInstitutionValidated !== false,
+      dni: user.dni || null,
     };
 
     return next();

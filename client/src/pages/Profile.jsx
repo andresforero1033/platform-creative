@@ -39,6 +39,22 @@ function Profile() {
               <dd className="capitalize">{user?.role || '-'}</dd>
             </div>
             <div>
+              <dt className="font-semibold text-slate-500">Institucion</dt>
+              <dd>{user?.institution?.name || '-'}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-500">Usuario de la Institucion</dt>
+              <dd>{user?.institution?.adminUsername || user?.institutionAdminReference || '-'}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-500">Estado de validacion institucional</dt>
+              <dd>{user?.isInstitutionValidated === false ? 'Pendiente' : 'Activo'}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-500">DNI</dt>
+              <dd>{user?.dni || '-'}</dd>
+            </div>
+            <div>
               <dt className="font-semibold text-slate-500">Puntos</dt>
               <dd>{user?.points || 0}</dd>
             </div>

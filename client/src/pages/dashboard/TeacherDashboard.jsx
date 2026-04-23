@@ -12,16 +12,25 @@ const INITIAL_FORM = {
   content: '',
 }
 
+const INITIAL_CLASS_FORM = {
+  subjectId: '',
+  courseName: '',
+}
+
 function TeacherDashboard() {
   const { user } = useAuth()
   const [subjects, setSubjects] = useState([])
+  const [classes, setClasses] = useState([])
   const [feedback, setFeedback] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reloadTick, setReloadTick] = useState(0)
   const [form, setForm] = useState(INITIAL_FORM)
+  const [classForm, setClassForm] = useState(INITIAL_CLASS_FORM)
   const [creatingLesson, setCreatingLesson] = useState(false)
+  const [creatingClass, setCreatingClass] = useState(false)
   const [formFeedback, setFormFeedback] = useState({ type: '', message: '' })
+  const [classFeedback, setClassFeedback] = useState({ type: '', message: '' })
   const titleInputRef = useRef(null)
 
   const teacherId = user?.id || user?._id
@@ -34,9 +43,10 @@ function TeacherDashboard() {
       setError('')
 
       try {
-        const [subjectsResponse, feedbackResponse] = await Promise.all([
+        const [subjectsResponse, feedbackResponse, classesResponse] = await Promise.all([
           api.get('/student/subjects'),
           api.get('/teacher/my-feedback'),
+          api.get('/teacher/classes'),
         ])
 
         const fetchedSubjects = Array.isArray(subjectsResponse?.data?.data)
@@ -45,10 +55,14 @@ function TeacherDashboard() {
         const fetchedFeedback = Array.isArray(feedbackResponse?.data?.data)
           ? feedbackResponse.data.data
           : []
+        const fetchedClasses = Array.isArray(classesResponse?.data?.data)
+          ? classesResponse.data.data
+          : []
 
         if (isMounted) {
           setSubjects(fetchedSubjects)
           setFeedback(fetchedFeedback)
+          setClasses(fetchedClasses)
         }
       } catch {
         if (isMounted) {
@@ -73,7 +87,12 @@ function TeacherDashboard() {
       const firstSubjectId = subjects[0]?._id || subjects[0]?.id || ''
       setForm((previous) => ({ ...previous, subjectId: firstSubjectId }))
     }
-  }, [subjects, form.subjectId])
+
+    if (!classForm.subjectId && subjects.length > 0) {
+      const firstSubjectId = subjects[0]?._id || subjects[0]?.id || ''
+      setClassForm((previous) => ({ ...previous, subjectId: firstSubjectId }))
+    }
+  }, [subjects, form.subjectId, classForm.subjectId])
 
   const assignedSubjects = useMemo(() => {
     if (!teacherId) return []
@@ -105,10 +124,21 @@ function TeacherDashboard() {
     [assignedSubjects],
   )
 
+  const activeClassesCount = useMemo(
+    () => classes.filter((classroom) => classroom.isActive !== false).length,
+    [classes],
+  )
+
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((previous) => ({ ...previous, [name]: value }))
     setFormFeedback({ type: '', message: '' })
+  }
+
+  const handleClassChange = (event) => {
+    const { name, value } = event.target
+    setClassForm((previous) => ({ ...previous, [name]: value }))
+    setClassFeedback({ type: '', message: '' })
   }
 
   const handleCreateLesson = async (event) => {
@@ -157,6 +187,51 @@ function TeacherDashboard() {
     }
   }
 
+  const handleCreateClass = async (event) => {
+    event.preventDefault()
+
+    if (!classForm.subjectId || !classForm.courseName.trim()) {
+      setClassFeedback({
+        type: 'error',
+        message: 'Selecciona materia y define un nombre de curso para generar classCode.',
+      })
+      return
+    }
+
+    setCreatingClass(true)
+    setClassFeedback({ type: '', message: '' })
+
+    try {
+      const response = await api.post(
+        '/teacher/classes',
+        {
+          subjectId: classForm.subjectId,
+          courseName: classForm.courseName.trim(),
+        },
+        { skipGlobalErrorToast: true },
+      )
+
+      const createdClass = response?.data?.data
+      if (createdClass) {
+        setClasses((previous) => [createdClass, ...previous])
+      }
+
+      setClassForm((previous) => ({ ...previous, courseName: '' }))
+      setClassFeedback({ type: 'success', message: 'Curso creado y classCode generado.' })
+      toast.success('ClassCode generado correctamente.')
+    } catch (requestError) {
+      const validationMessage = requestError?.response?.data?.data?.[0]?.msg
+      const backendMessage = requestError?.response?.data?.message
+
+      setClassFeedback({
+        type: 'error',
+        message: validationMessage || backendMessage || 'No se pudo crear el curso.',
+      })
+    } finally {
+      setCreatingClass(false)
+    }
+  }
+
   const focusCreateLessonForm = () => {
     titleInputRef.current?.focus()
     titleInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -195,7 +270,7 @@ function TeacherDashboard() {
           </p>
         </header>
 
-        <section className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <DashboardMetricCard
             label="Materias asignadas"
             value={assignedSubjects.length}
@@ -213,6 +288,12 @@ function TeacherDashboard() {
             value={pendingFeedback.length}
             description="Observaciones abiertas por revisar"
             tone="yellow"
+          />
+          <DashboardMetricCard
+            label="Cursos activos"
+            value={activeClassesCount}
+            description="Cursos con classCode para inscripcion"
+            tone="blue"
           />
         </section>
 
@@ -270,6 +351,68 @@ function TeacherDashboard() {
             </section>
 
             <section className="space-y-6">
+              <article className="glass-panel p-6">
+                <h2 className="text-xl font-extrabold text-slate-900">Cursos y ClassCode</h2>
+                <p className="mt-1 text-sm text-slate-600">Crea cursos (ej: 1001, 1102) y comparte su codigo para inscripcion.</p>
+
+                <form className="mt-4 space-y-3" onSubmit={handleCreateClass}>
+                  <select
+                    name="subjectId"
+                    value={classForm.subjectId}
+                    onChange={handleClassChange}
+                    className="glass-select"
+                    required
+                  >
+                    {subjects.map((subject) => {
+                      const subjectId = subject._id || subject.id
+                      return <option key={`class-subject-${subjectId}`} value={subjectId}>{subject.name}</option>
+                    })}
+                  </select>
+
+                  <input
+                    type="text"
+                    name="courseName"
+                    value={classForm.courseName}
+                    onChange={handleClassChange}
+                    className="glass-input"
+                    placeholder="Nombre del curso (ej: 1001)"
+                    required
+                  />
+
+                  {classFeedback.message ? (
+                    <p className={classFeedback.type === 'success' ? 'glass-panel border-brand-blue/25 bg-brand-blue/10 p-3 text-sm font-semibold text-brand-blue' : 'glass-error'}>
+                      {classFeedback.message}
+                    </p>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    className="glass-cta-primary w-full disabled:cursor-not-allowed disabled:opacity-80"
+                    disabled={creatingClass}
+                  >
+                    {creatingClass ? 'Generando...' : 'Generar ClassCode'}
+                  </button>
+                </form>
+
+                {classes.length === 0 ? (
+                  <p className="mt-4 text-sm text-slate-600">Aun no tienes cursos creados.</p>
+                ) : (
+                  <ul className="mt-4 space-y-2">
+                    {classes.slice(0, 6).map((classroom) => (
+                      <li key={classroom.id || classroom._id} className="glass-card border-brand-purple/20 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{classroom.subjectName} - {classroom.courseName}</p>
+                            <p className="text-xs text-slate-600">{classroom.studentCount || 0} estudiantes inscritos</p>
+                          </div>
+                          <span className="glass-badge-purple text-[11px]">{classroom.classCode}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+
               <article className="glass-panel p-6">
                 <h2 className="text-xl font-extrabold text-slate-900">Crear leccion</h2>
                 <p className="mt-1 text-sm text-slate-600">Acceso rapido para agregar contenido a una materia.</p>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import useAuth from '../../hooks/useAuth'
 import SubjectCard from '../../components/dashboard/SubjectCard'
@@ -47,6 +48,9 @@ function StudentDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reloadTick, setReloadTick] = useState(0)
+  const [classCode, setClassCode] = useState('')
+  const [enrollingClass, setEnrollingClass] = useState(false)
+  const [enrollFeedback, setEnrollFeedback] = useState({ type: '', message: '' })
   const userId = user?.id || user?._id
 
   useEffect(() => {
@@ -132,6 +136,41 @@ function StudentDashboard() {
     navigate(`/subjects/${subjectId}/lessons/${lessonId}`)
   }
 
+  const handleEnrollByClassCode = async (event) => {
+    event.preventDefault()
+
+    const normalizedCode = classCode.trim().toUpperCase()
+    if (!normalizedCode) {
+      setEnrollFeedback({ type: 'error', message: 'Ingresa un ClassCode valido.' })
+      return
+    }
+
+    setEnrollingClass(true)
+    setEnrollFeedback({ type: '', message: '' })
+
+    try {
+      const response = await api.post(
+        '/student/classes/enroll',
+        { classCode: normalizedCode },
+        { skipGlobalErrorToast: true },
+      )
+
+      const backendMessage = response?.data?.message || 'Inscripcion realizada correctamente.'
+      setClassCode('')
+      setEnrollFeedback({ type: 'success', message: backendMessage })
+      toast.success(backendMessage)
+      setReloadTick((previous) => previous + 1)
+    } catch (requestError) {
+      const validationMessage = requestError?.response?.data?.data?.[0]?.msg
+      const backendMessage = requestError?.response?.data?.message
+      const message = validationMessage || backendMessage || 'No se pudo completar la inscripcion.'
+
+      setEnrollFeedback({ type: 'error', message })
+    } finally {
+      setEnrollingClass(false)
+    }
+  }
+
   if (loading) {
     return (
       <main className="app-shell overflow-hidden py-10">
@@ -178,6 +217,40 @@ function StudentDashboard() {
           longestStreak={user?.longestStreak || user?.currentStreak || 0}
         />
 
+        <section className="glass-panel p-6">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-extrabold text-slate-900">Inscribirme con ClassCode</h2>
+            <span className="glass-badge-blue">Acceso por codigo</span>
+          </div>
+
+          <form className="flex flex-col gap-2 sm:flex-row" onSubmit={handleEnrollByClassCode}>
+            <input
+              type="text"
+              value={classCode}
+              onChange={(event) => {
+                setClassCode(event.target.value)
+                setEnrollFeedback({ type: '', message: '' })
+              }}
+              className="glass-input"
+              placeholder="Ej: CL8Y2KQ7P"
+              required
+            />
+            <button
+              type="submit"
+              className="glass-cta-primary whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-80"
+              disabled={enrollingClass}
+            >
+              {enrollingClass ? 'Inscribiendo...' : 'Inscribirme'}
+            </button>
+          </form>
+
+          {enrollFeedback.message ? (
+            <p className={`mt-3 ${enrollFeedback.type === 'success' ? 'glass-panel border-brand-blue/25 bg-brand-blue/10 p-3 text-sm font-semibold text-brand-blue' : 'glass-error'}`}>
+              {enrollFeedback.message}
+            </p>
+          ) : null}
+        </section>
+
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-extrabold text-slate-900 md:text-2xl">Materias y maestria</h2>
@@ -200,7 +273,7 @@ function StudentDashboard() {
           {!error && !hasSubjects ? (
             <EmptyState
               title="Sin materias asignadas"
-              description="Todavia no tienes materias activas. Cuando tu docente te habilite una ruta, aparecera aqui para comenzar."
+              description="Todavia no tienes materias activas. Usa un ClassCode de tu docente para inscribirte y ver tus materias aqui."
               ctaLabel="Ver perfil"
               ctaTo="/profile"
             />

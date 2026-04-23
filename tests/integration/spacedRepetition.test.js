@@ -5,6 +5,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const User = require("../../models/User");
 const Subject = require("../../models/Subject");
+const Classroom = require("../../models/Classroom");
 const Question = require("../../models/Question");
 const Quiz = require("../../models/Quiz");
 const Progress = require("../../models/Progress");
@@ -74,6 +75,15 @@ describe("Spaced repetition integration", () => {
           content: "Leccion de historia con eventos claves.",
         },
       ],
+    });
+
+    await Classroom.create({
+      institutionId: user.institutionId,
+      subjectId: subject._id,
+      teacherId: user._id,
+      courseName: "1301",
+      classCode: "CLSRS001",
+      studentIds: [user._id],
     });
 
     const q1 = await Question.create({

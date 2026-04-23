@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
+const DEFAULT_INSTITUTION_ID = new mongoose.Types.ObjectId("000000000000000000000001");
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -27,6 +29,32 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["student", "teacher", "parent", "supervisor", "admin"],
       required: true
+    },
+    institutionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institution",
+      required: true,
+      default: DEFAULT_INSTITUTION_ID,
+      index: true
+    },
+    institutionAdminReference: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: null,
+      match: [/^[a-z0-9._-]{4,30}$/, "institutionAdminReference invalido"],
+      index: true,
+    },
+    isInstitutionValidated: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    dni: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      match: [/^[A-Z0-9-]{5,30}$/, "DNI invalido"],
     },
     points: {
       type: Number,
@@ -91,6 +119,16 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true
+  }
+);
+
+userSchema.index(
+  { institutionId: 1, dni: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      dni: { $type: "string" },
+    },
   }
 );
 

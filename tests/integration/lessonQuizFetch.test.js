@@ -5,6 +5,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const User = require("../../models/User");
 const Subject = require("../../models/Subject");
+const Classroom = require("../../models/Classroom");
 const Question = require("../../models/Question");
 const Quiz = require("../../models/Quiz");
 
@@ -73,6 +74,15 @@ describe("Lesson quiz fetch integration", () => {
           content: "Contenido base para simple present.",
         },
       ],
+    });
+
+    await Classroom.create({
+      institutionId: student.institutionId,
+      subjectId: subject._id,
+      teacherId: student._id,
+      courseName: "1102",
+      classCode: "CLQUIZ001",
+      studentIds: [student._id],
     });
 
     const q1 = await Question.create({
