@@ -6,7 +6,7 @@ import NotificationBell from '../notifications/NotificationBell.jsx'
 function Navbar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated, logout } = useAuth()
+  const { isAuthenticated, logout, user } = useAuth()
   const isLanding = location.pathname === '/'
 
   const handleLogout = async () => {
@@ -17,11 +17,12 @@ function Navbar() {
   return (
     <header className="glass-nav sticky top-0 z-40">
       <nav className="app-content flex items-center justify-between py-4">
-        <Link
-          to="/"
-          className="group rounded-lg text-lg font-extrabold tracking-tight text-brand-purple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/30"
-        >
-          Creative Platform
+        <Link to="/" className="group rounded-lg flex items-center gap-3 text-lg font-extrabold tracking-tight focus-visible:outline-none">
+          {user?.institution?.logoUrl ? (
+            <img src={user.institution.logoUrl} alt="Logo" className="h-8 w-auto rounded-sm object-contain" />
+          ) : (
+            <span className="text-brand-purple">Creative Platform</span>
+          )}
           <span className="mt-1 block h-0.5 w-0 rounded-full bg-brand-purple transition-all duration-300 group-hover:w-full" />
         </Link>
 

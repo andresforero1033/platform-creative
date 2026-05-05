@@ -208,6 +208,31 @@ async function updateInstitutionValidationStatus(userId, isInstitutionValidated)
   ).lean();
 }
 
+async function updateManyValidationStatusByIdsAndInstitutionReference(userIds, institutionAdminReference, isInstitutionValidated) {
+  const normalizedReference = normalizeInstitutionAdminReference(institutionAdminReference);
+  if (!normalizedReference || !Array.isArray(userIds) || userIds.length === 0) {
+    return { matchedCount: 0, modifiedCount: 0 };
+  }
+
+  const filter = {
+    _id: { $in: userIds },
+    institutionAdminReference: normalizedReference,
+    role: { $in: ["student", "teacher", "parent"] },
+  };
+
+  const update = {
+    $set: {
+      isInstitutionValidated: !!isInstitutionValidated,
+    },
+  };
+
+  const result = await User.updateMany(filter, update);
+  return {
+    matchedCount: result.matchedCount || result.n || 0,
+    modifiedCount: result.modifiedCount || result.nModified || 0,
+  };
+}
+
 module.exports = {
   findByEmailLean,
   createUser,
@@ -226,4 +251,5 @@ module.exports = {
   addBadgeToUser,
   updateProfileMetadata,
   updateInstitutionValidationStatus,
+  updateManyValidationStatusByIdsAndInstitutionReference,
 };

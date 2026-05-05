@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import DashboardMetricCard from '../../components/dashboard/DashboardMetricCard'
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Legend,
+} from 'recharts'
 import useAuth from '../../hooks/useAuth'
 
 const ROLE_ORDER = ['student', 'teacher', 'parent', 'supervisor', 'admin']
@@ -58,6 +71,8 @@ function AdminDashboard() {
   const [roleFilter, setRoleFilter] = useState('all')
   const [institutionUsersSummary, setInstitutionUsersSummary] = useState(null)
   const [institutionUsers, setInstitutionUsers] = useState([])
+  const [selectedIds, setSelectedIds] = useState([])
+  const [processingBulk, setProcessingBulk] = useState(false)
   const [loadingInstitutionUsers, setLoadingInstitutionUsers] = useState(true)
   const [institutionUsersError, setInstitutionUsersError] = useState('')
   const [activationInProgressUserId, setActivationInProgressUserId] = useState('')
@@ -69,6 +84,14 @@ function AdminDashboard() {
   const [sendingGlobalMessage, setSendingGlobalMessage] = useState(false)
   const [globalResult, setGlobalResult] = useState(null)
   const [globalError, setGlobalError] = useState('')
+  const [brand, setBrand] = useState({ logoUrl: '', primaryColor: '' })
+  const [loadingBrand, setLoadingBrand] = useState(true)
+  const [brandError, setBrandError] = useState('')
+  const [savingBrand, setSavingBrand] = useState(false)
+  const [staffStats, setStaffStats] = useState(null)
+  const [loadingStaff, setLoadingStaff] = useState(false)
+  const [staffError, setStaffError] = useState('')
+  const [staffPeriod, setStaffPeriod] = useState('month')
 
   useEffect(() => {
     let isMounted = true
@@ -130,6 +153,8 @@ function AdminDashboard() {
       const payload = response?.data?.data || null
       setInstitutionUsersSummary(payload)
       setInstitutionUsers(Array.isArray(payload?.users) ? payload.users : [])
+      // reset selection when reloading
+      setSelectedIds([])
     } catch {
       setInstitutionUsersError('No se pudo cargar la gestion de usuarios institucionales.')
       setInstitutionUsersSummary(null)
@@ -142,6 +167,51 @@ function AdminDashboard() {
   useEffect(() => {
     loadInstitutionUsers(roleFilter)
   }, [roleFilter])
+
+  useEffect(() => {
+    let mounted = true
+    const loadStaff = async () => {
+      setLoadingStaff(true)
+      setStaffError('')
+
+      try {
+        const res = await api.get('/admin/staff-stats', { params: { period: staffPeriod } })
+        if (!mounted) return
+        setStaffStats(res?.data?.data || null)
+      } catch (e) {
+        if (mounted) setStaffError('No se pudieron cargar las estadisticas de docentes.')
+      } finally {
+        if (mounted) setLoadingStaff(false)
+      }
+    }
+
+    loadStaff()
+
+    return () => { mounted = false }
+  }, [staffPeriod])
+
+  useEffect(() => {
+    let mounted = true
+    const loadBrand = async () => {
+      setLoadingBrand(true)
+      setBrandError('')
+      try {
+        const res = await api.get('/admin/institution/brand')
+        const data = res?.data?.data || {}
+        if (mounted) {
+          setBrand({ logoUrl: data.logoUrl || '', primaryColor: data.primaryColor || '' })
+        }
+      } catch (e) {
+        if (mounted) setBrandError('No se pudo cargar la marca institucional.')
+      } finally {
+        if (mounted) setLoadingBrand(false)
+      }
+    }
+
+    loadBrand()
+
+    return () => { mounted = false }
+  }, [])
 
   const handleTriggerReminders = async () => {
     setTriggering(true)
@@ -210,6 +280,40 @@ function AdminDashboard() {
       setInstitutionUsersError('No se pudo activar el usuario seleccionado.')
     } finally {
       setActivationInProgressUserId('')
+    }
+  }
+
+  const adminReference = institutionUsersSummary?.institutionAdminReference || user?.institutionAdminReference || ''
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  const handleBulkAction = async (isValidated) => {
+    if (!Array.isArray(selectedIds) || selectedIds.length === 0) return
+
+    setProcessingBulk(true)
+    try {
+      const response = await api.patch('/admin/users/bulk-activation', {
+        userIds: selectedIds,
+        isInstitutionValidated: !!isValidated,
+      })
+
+      const info = response?.data?.data || {}
+      const processed = info.modified || info.modifiedCount || 0
+      const requested = info.requested || selectedIds.length
+
+      // update local state for those users
+      setInstitutionUsers((prev) => prev.map((u) => (
+        selectedIds.includes(u.id) ? { ...u, isInstitutionValidated: !!isValidated } : u
+      )))
+
+      toast.success(`${processed} de ${requested} usuarios procesados correctamente.`)
+      setSelectedIds([])
+    } catch (err) {
+      toast.error('No se pudo completar la operacion en lote.')
+    } finally {
+      setProcessingBulk(false)
     }
   }
 
@@ -325,45 +429,183 @@ function AdminDashboard() {
                   </p>
                 ) : (
                   <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 text-sm text-slate-600">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.length > 0 && selectedIds.length === institutionUsers.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              const validIds = institutionUsers
+                                .filter((u) => (u.institutionAdminReference || '') === adminReference)
+                                .map((u) => u.id)
+                              setSelectedIds(validIds)
+                            } else {
+                              setSelectedIds([])
+                            }
+                          }}
+                        />
+                        Seleccionar todos
+                      </label>
+                      <div className="text-sm text-slate-500">Seleccionados: {selectedIds.length}</div>
+                    </div>
+
                     {institutionUsers.map((account) => (
                       <article key={account.id} className="glass-card border-brand-blue/20 p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-black text-slate-900">{account.name}</p>
-                            <p className="text-xs text-slate-600">{account.email}</p>
-                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                              {MANAGED_ROLE_LABELS[account.role] || account.role}
-                            </p>
-                            <p className="text-xs text-slate-500">DNI: {account.dni || 'Sin DNI'}</p>
+                        <div className="flex items-start gap-3">
+                          <div className="pt-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(account.id)}
+                              onChange={() => toggleSelect(account.id)}
+                              disabled={(account.institutionAdminReference || '') !== adminReference}
+                            />
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
-                                account.isInstitutionValidated === false
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-emerald-100 text-emerald-700'
-                              }`}
-                            >
-                              {account.isInstitutionValidated === false ? 'Pendiente' : 'Activo'}
-                            </span>
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-black text-slate-900">{account.name}</p>
+                                <p className="text-xs text-slate-600">{account.email}</p>
+                                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                  {MANAGED_ROLE_LABELS[account.role] || account.role}
+                                </p>
+                                <p className="text-xs text-slate-500">DNI: {account.dni || 'Sin DNI'}</p>
+                              </div>
 
-                            {account.isInstitutionValidated === false ? (
-                              <button
-                                type="button"
-                                onClick={() => handleActivateUser(account.id)}
-                                disabled={activationInProgressUserId === account.id}
-                                className="glass-cta-primary disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {activationInProgressUserId === account.id ? 'Activando...' : 'Activar'}
-                              </button>
-                            ) : null}
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
+                                    account.isInstitutionValidated === false
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-emerald-100 text-emerald-700'
+                                  }`}
+                                >
+                                  {account.isInstitutionValidated === false ? 'Pendiente' : 'Activo'}
+                                </span>
+
+                                {account.isInstitutionValidated === false ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleActivateUser(account.id)}
+                                    disabled={activationInProgressUserId === account.id}
+                                    className="glass-cta-primary disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {activationInProgressUserId === account.id ? 'Activando...' : 'Activar'}
+                                  </button>
+                                ) : null}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </article>
                     ))}
                   </div>
                 )
+              ) : null}
+            </section>
+
+            <section className="glass-panel p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Rendimiento de Docentes</h2>
+                  <p className="mt-1 text-sm text-slate-600">Visibilidad de actividad, lecciones y alumnos por docente.</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-sm text-slate-600">Periodo:</div>
+                  <button
+                    type="button"
+                    onClick={() => setStaffPeriod('month')}
+                    className={`rounded-full px-3 py-1 text-sm font-semibold ${staffPeriod === 'month' ? 'bg-brand-blue text-white' : 'bg-white/70'}`}
+                  >
+                    Este Mes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStaffPeriod('all')}
+                    className={`rounded-full px-3 py-1 text-sm font-semibold ${staffPeriod === 'all' ? 'bg-brand-blue text-white' : 'bg-white/70'}`}
+                  >
+                    Todo el tiempo
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="glass-cta-secondary"
+                  >
+                    Exportar Resumen
+                  </button>
+                </div>
+              </div>
+
+              {loadingStaff ? <p className="mt-4 text-sm text-slate-600">Cargando estadisticas...</p> : null}
+              {staffError ? <p className="glass-error mt-3">{staffError}</p> : null}
+
+              {!loadingStaff && staffStats ? (
+                <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+                  <div>
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="text-left text-xs text-slate-600">
+                          <th>Nombre</th>
+                          <th>Última actividad</th>
+                          <th>L. creadas</th>
+                          <th>Estudiantes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.isArray(staffStats.teachers) && staffStats.teachers.length > 0 ? (
+                          staffStats.teachers.map((t) => (
+                            <tr key={t.id} className="border-t">
+                              <td className="py-3 font-semibold text-slate-800">{t.name}</td>
+                              <td className="py-3 text-slate-600">{t.lastActivity ? new Date(t.lastActivity).toLocaleString('es-ES') : '—'}</td>
+                              <td className="py-3 text-slate-700">{t.lessonsCreated}</td>
+                              <td className="py-3 text-slate-700">{t.studentsEnrolled}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="py-4 text-slate-600">No hay docentes para el periodo seleccionado.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="h-44">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={staffStats.lessonsDistributionBySubject || []}
+                            dataKey="count"
+                            nameKey="name"
+                            innerRadius={30}
+                            outerRadius={60}
+                          >
+                            {(staffStats.lessonsDistributionBySubject || []).map((entry, idx) => (
+                              <Cell key={`cell-${idx}`} fill={entry.color || '#8884d8'} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="h-44">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={staffStats.lessonsDistributionBySubject || []}>
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="count" fill="var(--brand-primary)" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
               ) : null}
             </section>
 
@@ -382,6 +624,84 @@ function AdminDashboard() {
                 ))}
               </div>
               </section>
+
+            <section className="glass-panel p-6">
+              <h2 className="text-xl font-extrabold text-slate-900">Mi Institución</h2>
+              <p className="mt-1 text-sm text-slate-600">Configura el logo y color primario de tu institución.</p>
+
+              {loadingBrand ? (
+                <p className="mt-4 text-sm text-slate-600">Cargando datos de marca...</p>
+              ) : null}
+
+              {brandError ? <p className="glass-error mt-3">{brandError}</p> : null}
+
+              {!loadingBrand ? (
+                <form
+                  className="mt-4 space-y-3"
+                  onSubmit={async (e) => {
+                    e.preventDefault()
+                    setSavingBrand(true)
+                    setBrandError('')
+                    try {
+                      const payload = { logoUrl: brand.logoUrl || null, primaryColor: brand.primaryColor || null }
+                      await api.patch('/admin/institution/brand', payload)
+                      toast.success('Marca institucional actualizada')
+                    } catch (err) {
+                      setBrandError('No se pudo guardar la marca en este momento.')
+                    } finally {
+                      setSavingBrand(false)
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-28 h-20 rounded-lg overflow-hidden border bg-white/60 flex items-center justify-center">
+                      {brand.logoUrl ? (
+                        <img src={brand.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <div className="text-sm text-slate-500">Sin logo</div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="text"
+                        placeholder="URL del logo (https://...)"
+                        value={brand.logoUrl}
+                        onChange={(ev) => setBrand((p) => ({ ...p, logoUrl: ev.target.value }))}
+                        className="glass-input"
+                      />
+
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm text-slate-600">Color primario</label>
+                        <input
+                          type="color"
+                          value={brand.primaryColor || '#7c3aed'}
+                          onChange={(ev) => setBrand((p) => ({ ...p, primaryColor: ev.target.value }))}
+                          className="w-12 h-8 p-0 border rounded"
+                        />
+                        <input
+                          type="text"
+                          value={brand.primaryColor || ''}
+                          onChange={(ev) => setBrand((p) => ({ ...p, primaryColor: ev.target.value }))}
+                          placeholder="#7c3aed"
+                          className="glass-input max-w-[160px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <button
+                      type="submit"
+                      disabled={savingBrand}
+                      className="glass-cta-primary disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {savingBrand ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </section>
 
               <section className="glass-panel p-6">
               <h2 className="text-xl font-extrabold text-slate-900">Motor de recordatorios</h2>
@@ -460,6 +780,27 @@ function AdminDashboard() {
               </div>
               </section>
             </div>
+          </div>
+        ) : null}
+        {selectedIds.length > 0 ? (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-white/80 p-3 rounded-xl shadow-lg">
+            <div className="text-sm font-semibold">{selectedIds.length} seleccionados</div>
+            <button
+              type="button"
+              onClick={() => handleBulkAction(true)}
+              disabled={processingBulk}
+              className="glass-cta-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Activar seleccionados
+            </button>
+            <button
+              type="button"
+              onClick={() => handleBulkAction(false)}
+              disabled={processingBulk}
+              className="px-4 py-2 rounded-full bg-white border border-red-200 text-red-700 font-semibold disabled:opacity-60"
+            >
+              Suspender seleccionados
+            </button>
           </div>
         ) : null}
       </section>

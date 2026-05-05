@@ -6,6 +6,7 @@
   --brand-blue-rgb: 22 119 255;
   --brand-purple-rgb: 109 78 255;
   --brand-yellow-rgb: 255 204 0;
+  --brand-primary: #6d4bff;
   --edu-ink-rgb: 15 23 42;
 }
 
@@ -100,7 +101,8 @@ body::before {
   }
 
   .glass-cta-primary {
-    @apply glass-cta bg-brand-purple text-white shadow-glow hover:brightness-110;
+    @apply glass-cta text-white shadow-glow hover:brightness-110;
+    background-color: var(--brand-primary);
   }
 
   .glass-cta-blue {

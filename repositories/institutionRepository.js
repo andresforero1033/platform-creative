@@ -30,6 +30,8 @@ async function createInstitution(payload) {
     legalId: payload.legalId,
     licenseStatus: payload.licenseStatus || "active",
     isActive: payload.isActive !== false,
+    logoUrl: payload.logoUrl || null,
+    primaryColor: payload.primaryColor || null,
   });
 }
 
@@ -44,6 +46,8 @@ async function upsertByAdminUsername(payload) {
         legalId: payload.legalId,
         licenseStatus: payload.licenseStatus || "active",
         isActive: payload.isActive !== false,
+        logoUrl: payload.logoUrl || null,
+        primaryColor: payload.primaryColor || null,
       },
       $setOnInsert: {
         adminUsername: normalizedAdminUsername,
@@ -57,10 +61,28 @@ async function upsertByAdminUsername(payload) {
   ).lean();
 }
 
+async function updateBrandByAdminUsername(adminUsername, brandPayload = {}) {
+  const normalizedAdminUsername = normalizeAdminUsername(adminUsername);
+  if (!normalizedAdminUsername) return null;
+
+  const set = {};
+  if (typeof brandPayload.logoUrl === 'string') set.logoUrl = brandPayload.logoUrl || null;
+  if (typeof brandPayload.primaryColor === 'string') set.primaryColor = brandPayload.primaryColor || null;
+
+  if (Object.keys(set).length === 0) return null;
+
+  return Institution.findOneAndUpdate(
+    { adminUsername: normalizedAdminUsername },
+    { $set: set },
+    { new: true, runValidators: true }
+  ).lean();
+}
+
 module.exports = {
   normalizeAdminUsername,
   findByAdminUsernameLean,
   findByIdLean,
   createInstitution,
   upsertByAdminUsername,
+  updateBrandByAdminUsername,
 };

@@ -38,6 +38,18 @@ const institutionSchema = new mongoose.Schema(
       default: true,
       index: true,
     },
+    // Branding / white-label
+    logoUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    primaryColor: {
+      type: String,
+      trim: true,
+      default: null,
+      match: [/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'primaryColor debe ser un hex valido, por ejemplo #1a73e8'],
+    },
   },
   {
     timestamps: true,

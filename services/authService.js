@@ -346,6 +346,13 @@ async function login(payload) {
 
   const institution = await institutionRepository.findByIdLean(user.institutionId);
 
+  // Update last activity timestamp on successful login
+  try {
+    await userRepository.updateActivityAndStreak(user._id, { lastActivity: new Date(), currentStreak: user.currentStreak || 0 });
+  } catch (e) {
+    // ignore errors updating activity
+  }
+
   return {
     statusCode: 200,
     message: "Sesion iniciada correctamente.",

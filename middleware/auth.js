@@ -42,6 +42,13 @@ async function protect(req, res, next) {
       dni: user.dni || null,
     };
 
+    // Update last activity asynchronously (do not block request)
+    try {
+      userRepository.updateActivityAndStreak(user._id, { lastActivity: new Date(), currentStreak: user.currentStreak || 0 }).catch(() => {});
+    } catch (e) {
+      // ignore
+    }
+
     return next();
   } catch (error) {
     return res.status(401).json({ message: "No autorizado: token invalido." });

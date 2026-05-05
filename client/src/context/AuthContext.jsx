@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import api from '../api/axios'
 import AuthContext from './AuthContextValue'
+import { connectRealtimeSocket, disconnectRealtimeSocket } from '../realtime/socketClient'
 
 const ACCESS_TOKEN_KEY = 'creative_access_token'
 const REFRESH_TOKEN_KEY = 'creative_refresh_token'
@@ -182,6 +183,56 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
+
+  useEffect(() => {
+    // Apply institution primary color to root CSS when user changes
+    if (user && user.institution && user.institution.primaryColor) {
+      try {
+        document.documentElement.style.setProperty('--brand-primary', user.institution.primaryColor)
+      } catch (e) {
+        // ignore in non-browser environments
+      }
+    }
+
+    // Connect realtime socket when we have a token/user
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
+    const socket = token ? connectRealtimeSocket(token) : null
+
+    function handleBrandUpdate(payload) {
+      if (!payload) return
+      const { logoUrl, primaryColor } = payload || {}
+      setUser((prev) => {
+        if (!prev) return prev
+        const updated = {
+          ...prev,
+          institution: {
+            ...(prev.institution || {}),
+            logoUrl: typeof logoUrl === 'string' ? logoUrl : prev.institution?.logoUrl,
+            primaryColor: typeof primaryColor === 'string' ? primaryColor : prev.institution?.primaryColor,
+          },
+        }
+        try {
+          localStorage.setItem(USER_KEY, JSON.stringify(updated))
+        } catch (e) {}
+        // also update CSS variable
+        if (updated.institution && updated.institution.primaryColor) {
+          try { document.documentElement.style.setProperty('--brand-primary', updated.institution.primaryColor) } catch (e) {}
+        }
+        return updated
+      })
+    }
+
+    if (socket) {
+      socket.on('INSTITUTION_BRAND_UPDATED', handleBrandUpdate)
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('INSTITUTION_BRAND_UPDATED', handleBrandUpdate)
+        disconnectRealtimeSocket()
+      }
+    }
+  }, [user])
 
   const value = useMemo(() => ({
     user,
